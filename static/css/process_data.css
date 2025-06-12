@@ -1,0 +1,417 @@
+/* General container for the process data page */
+.process-data-wrapper {
+    max-width: 900px; /* Adjust as needed */
+    margin: 40px auto;
+    padding: 30px;
+    background-color: #1a1a1a; /* Darker background for the main content area */
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    text-align: center; /* Center content within the wrapper */
+}
+
+/* Page title styling */
+.page-title {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.page-title h1 {
+    font-size: 2.5em;
+    color: #f0f0f0;
+    margin-bottom: 0;
+    font-weight: 600;
+}
+
+/* File Upload Area Styling */
+.file-upload-area {
+    border: 2px dashed #444; /* Dashed border for drag-and-drop */
+    border-radius: 12px;
+    background-color: #2a2a2a; /* Dark background for the drop area */
+    padding: 60px 20px; /* Increased padding for a larger area */
+    margin-bottom: 40px;
+    color: #b0b0b0; /* Light grey text */
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.file-upload-area.highlight {
+    background-color: #3a3a3a; /* Lighter background when dragging over */
+    border-color: #6a82fb; /* Highlight border color */
+}
+
+.file-upload-area p {
+    margin: 5px 0;
+}
+
+.browse-files-button {
+    background: none; /* No background */
+    border: 1px solid #6a82fb; /* Blue border */
+    color: #6a82fb; /* Blue text */
+    padding: 10px 25px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 1em;
+    margin-top: 20px; /* Space between text and button */
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.browse-files-button:hover {
+    background-color: #6a82fb;
+    color: white;
+}
+
+.file-list {
+    list-style: none; /* Remove bullet points */
+    padding: 0;
+    margin-top: 20px;
+    color: #f0f0f0; /* Light text for file names */
+}
+
+.file-list li {
+    background-color: #333;
+    padding: 8px 15px;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    display: inline-block; /* Display as blocks but allow multiple on a line */
+    margin-right: 10px;
+    font-size: 0.9em;
+}
+
+/* Action Buttons Container */
+.action-buttons-container {
+    display: flex; /* Use flexbox to align buttons */
+    justify-content: space-between; /* Puts space between them */
+    align-items: center;
+    margin-top: 40px;
+}
+
+.select-instruction-button {
+    background: none;
+    border: 1px solid #b0b0b0; /* Light grey border */
+    color: #b0b0b0; /* Light grey text */
+    padding: 12px 30px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: 500;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.select-instruction-button:hover {
+    background-color: #b0b0b0;
+    color: #1a1a1a; /* Dark text on hover */
+}
+
+.clean-data-button {
+    background: linear-gradient(135deg, #6a82fb, #fc5c7d); /* Blue to pink gradient */
+    border: none;
+    color: white;
+    padding: 12px 30px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.clean-data-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Global body styling (from base.html or a common CSS file) */
+body {
+    background-color: #121212; /* Very dark background for the entire page */
+    font-family: 'Arial', sans-serif; /* Or your preferred font */
+    color: #f0f0f0;
+}
+
+/* Header specific adjustments */
+.main-header .container {
+    padding: 15px 30px;
+}
+.main-header .logo {
+    color: #f0f0f0;
+    font-size: 1.8em;
+}
+.main-header .logo i {
+    color: #6a82fb; /* Blue diamond icon */
+}
+.main-nav .nav-links a {
+    color: #b0b0b0;
+}
+.main-nav .nav-links .btn-gradient {
+    background: linear-gradient(135deg, #6a82fb, #fc5c7d);
+    color: white;
+}
+
+/* Instruction Selection Display */
+.instruction-selection-display {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #2a2a2a;
+    border-radius: 8px;
+    color: #f0f0f0;
+    font-size: 1.1em;
+}
+
+.instruction-selection-display #selectedInstructionName {
+    font-weight: bold;
+    color: #6a82fb; /* Highlight selected instruction name */
+}
+
+
+/* --- Modal Styles --- */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    /* overflow: auto; Enable scroll if needed */
+    background-color: rgba(0,0,0,0.7); /* Black w/ opacity */
+    align-items: center; /* Center content vertically */
+    justify-content: center; /* Center content horizontally */
+}
+
+.modal-content {
+    background-color: #1a1a1a; /* Dark background */
+    margin: auto;
+    padding: 30px;
+    border: 1px solid #333;
+    border-radius: 10px;
+    width: 80%; /* Could be responsive */
+    max-width: 500px; /* Max width for larger screens */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    position: relative;
+    color: #f0f0f0; /* Light text */
+}
+
+.modal-content h2 {
+    color: #6a82fb; /* Blue title */
+    margin-top: 0;
+    margin-bottom: 25px;
+    font-size: 2em;
+    text-align: center;
+}
+
+.close-button {
+    color: #aaa;
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #f0f0f0;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* --- FIX FOR SCROLLBAR IN MODAL STARTS HERE --- */
+.instruction-list-container {
+    margin-bottom: 20px;
+    text-align: left; /* Ensure list items align left */
+    /* All scrollbar-related properties previously here have been removed */
+}
+/* All ::-webkit-scrollbar rules for this container have been removed as well */
+/* --- FIX FOR SCROLLBAR IN MODAL ENDS HERE --- */
+
+
+.instruction-selection-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.instruction-item {
+    display: flex; /* Use flex for alignment */
+    align-items: center;
+    background-color: #2a2a2a;
+    border-radius: 8px;
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.instruction-item:hover {
+    background-color: #3a3a3a;
+}
+
+.instruction-item input[type="radio"] {
+    margin-right: 15px;
+    /* Custom styling for radio button */
+    appearance: none; /* Hide default radio */
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #6a82fb; /* Blue border */
+    border-radius: 50%;
+    outline: none;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0; /* Prevent it from shrinking */
+}
+
+.instruction-item input[type="radio"]:checked {
+    background-color: #6a82fb; /* Blue background when checked */
+    border-color: #6a82fb;
+}
+
+/* Inner dot for checked state */
+.instruction-item input[type="radio"]:checked::before {
+    content: '';
+    display: block;
+    width: 10px;
+    height: 10px;
+    background-color: #1a1a1a; /* Dark dot */
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+
+.instruction-item label {
+    flex-grow: 1; /* Label takes remaining space */
+    cursor: pointer;
+    font-size: 1.1em;
+    color: #f0f0f0;
+}
+
+.instruction-item .default-tag {
+    background-color: #4CAF50; /* Green tag for default */
+    color: white;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 0.8em;
+    margin-left: 10px;
+    font-weight: normal;
+}
+
+.modal-select-button,
+.modal-cancel-button {
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 1em;
+    cursor: pointer;
+    margin: 0 10px; /* Space between buttons */
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.modal-select-button {
+    background: linear-gradient(135deg, #6a82fb, #fc5c7d); /* Gradient like clean data button */
+    color: white;
+    border: none;
+}
+
+.modal-select-button:hover {
+    opacity: 0.9;
+}
+
+.modal-cancel-button {
+    background-color: #444;
+    color: white;
+    border: none;
+}
+
+.modal-cancel-button:hover {
+    background-color: #555;
+}
+
+/* Adjust button container in modal */
+.modal-content > button { /* Target buttons directly inside modal-content */
+    display: inline-block;
+    margin-top: 20px;
+}
+
+/* Image Preview Container styles (from process_physical_data.css) */
+/* This is specifically for the file display area when images are uploaded */
+.image-preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 20px;
+    justify-content: center;
+    max-height: 250px; /* Kept here as it's specifically for image previews */
+    overflow-y: auto; /* Kept here for image previews */
+    width: 100%;
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: #6a82fb #2a2a2a;
+}
+
+.image-preview-container::-webkit-scrollbar {
+    width: 10px;
+}
+
+.image-preview-container::-webkit-scrollbar-track {
+    background: #2a2a2a;
+    border-radius: 10px;
+}
+
+.image-preview-container::-webkit-scrollbar-thumb {
+    background-color: #6a82fb;
+    border-radius: 10px;
+    border: 2px solid #2a2a2a;
+}
+
+.image-preview-item {
+    background-color: #3a3a3a;
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100px;
+    height: 120px;
+    overflow: hidden;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.image-preview-item img {
+    max-width: 100%;
+    max-height: 70px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.image-preview-item span {
+    font-size: 0.8em;
+    color: #f0f0f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    display: block;
+}
+
+.image-preview-item.non-image {
+    background-color: #555;
+    color: #f0f0f0;
+}
+.image-preview-item.non-image i {
+    font-size: 2.5em;
+    color: #b0b0b0;
+}
+.image-preview-item .error-text {
+    font-size: 0.7em;
+    color: #ff6b6b;
+    margin-top: 5px;
+}
+

@@ -1,0 +1,374 @@
+/* =====================================
+   Manage Instructions Page Styles
+   ===================================== */
+
+/* --- Page Wrapper --- */
+.manage-instructions-wrapper {
+    padding: var(--spacing-xl) var(--spacing-lg); /* Consistent padding with dashboard */
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+    color: var(--color-text-light); /* Inherit light text color */
+}
+
+/* --- Page Header --- */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    gap: var(--spacing-md); /* Space between title and buttons */
+    /* margin-bottom: var(--spacing-sml); */
+}
+
+.page-header h1 {
+    font-size: var(--font-size-heading2);
+    color: var(--color-white);
+    margin: 0;
+    flex-grow: 1; /* Allow title to take available space */
+}
+
+.header-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap; /* Allow buttons to wrap */
+    justify-content: flex-end; /* Align buttons to the right */
+}
+
+/* Basic Button Styles (assuming .btn-gradient from landing_page.css) */
+/* Define .btn-secondary if not already in landing_page.css */
+.btn-secondary {
+    background-color: transparent;
+    border: 1px solid var(--color-blue-primary);
+    color: var(--color-blue-primary);
+    padding: 10px 20px;
+    border-radius: var(--border-radius-md);
+    text-decoration: none;
+    font-size: var(--font-size-body);
+    transition: background-color var(--transition-speed), color var(--transition-speed), border-color var(--transition-speed);
+    white-space: nowrap; /* Prevent text wrapping inside buttons */
+}
+
+.btn-secondary:hover {
+    background-color: var(--color-blue-primary);
+    color: var(--color-white);
+}
+/* --- Table Styles --- */
+.table-container {
+    width: 100%;
+    overflow-x: auto; /* Enable horizontal scrolling for tables on small screens */
+    margin-top: var(--spacing-sm);
+    border-radius: var(--border-radius-md); /* Rounded corners for the container */
+    border: 1px solid var(--color-border); /* Border around the table container */
+    background-color: var(--color-card-bg); /* Match card background */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.instruction-table {
+    width: 100%;
+    border-collapse: collapse; /* Remove default table spacing */
+    min-width: 800px; /* Ensure table doesn't get too narrow before scrolling for better layout */
+}
+
+.instruction-table th,
+.instruction-table td {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--color-border); /* Only bottom border for rows */
+    border-right: 1px solid var(--color-border); /* Vertical dividers */
+    vertical-align: middle; /* Center content vertically in cells */
+}
+/* Remove right border for the last column */
+.instruction-table th:last-child,
+.instruction-table td:last-child {
+    border-right: none;
+}
+
+
+.instruction-table thead th {
+    background-color: var(--color-card-bg); /* Header background same as card for continuity */
+    color: var(--color-white);
+    text-align: left;
+    font-weight: 600;
+    white-space: nowrap; /* Prevent headers from wrapping too much */
+}
+/* Specific header background for the very top edge */
+.instruction-table thead tr {
+    border-bottom: 1px solid var(--color-border);
+}
+
+
+.instruction-table tbody tr {
+    background-color: transparent; /* No background for rows, rely on container */
+    transition: background-color var(--transition-speed);
+    cursor: pointer; /* Indicate row is clickable */
+}
+/* Remove last row's bottom border */
+.instruction-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.instruction-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.05); /* Subtle highlight on hover */
+}
+
+
+
+/* --- Table Content Specifics --- */
+.instruction-name {
+    font-weight: 600; /* Bolder for instruction name */
+    color: var(--color-white);
+}
+
+.instruction-description {
+    font-size: 0.9em;
+    color: var(--color-text-secondary);
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-radius: 20px; /* Pill shape */
+    font-size: 0.8em;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    min-width: 80px; /* Consistent width */
+    text-align: center;
+}
+
+.status-active {
+    background-color: #28a74530; /* Green with transparency */
+    color: #28a745;
+}
+
+.status-inactive {
+    background-color: #6c757d30; /* Gray with transparency */
+    color: #6c757d;
+}
+
+/* Default Checkbox */
+.default-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--color-blue-primary); /* Style the checkbox */
+    margin: 0; /* Remove default margin */
+}
+
+.default-checkbox:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* --- Action Buttons --- */
+.actions-cell {
+    white-space: nowrap; /* Keep buttons on one line */
+    text-align: center; /* Center icons in the cell */
+}
+
+.inline-form {
+    display: inline-block;
+    margin: 0 4px; /* Space between icons */
+}
+
+.btn-action {
+    padding: 8px; /* Square buttons for icons */
+    font-size: 1em; /* Adjust icon size */
+    border: none;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--color-white);
+    background-color: transparent; /* Default transparent background */
+    transition: background-color var(--transition-speed), transform var(--transition-speed), color var(--transition-speed);
+}
+
+.btn-action:hover {
+    transform: scale(1.1); /* Slight pop on hover */
+}
+
+.btn-delete {
+    color: #dc3545; /* Red icon for delete */
+}
+.btn-delete:hover {
+    background-color: rgba(220, 53, 69, 0.2); /* Red background on hover */
+}
+
+.btn-set-default {
+    color: #ffc107; /* Yellow icon for set default (star) */
+}
+.btn-set-default:hover {
+    background-color: rgba(255, 193, 7, 0.2); /* Yellow background on hover */
+}
+
+
+/* --- No Instructions Message --- */
+.no-instructions-message {
+    text-align: center;
+    font-size: var(--font-size-body-large);
+    color: var(--color-text-secondary);
+    margin-top: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    background-color: var(--color-card-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+}
+
+/* =====================================
+   Responsive Adjustments
+   ===================================== */
+
+@media (max-width: 768px) {
+    .manage-instructions-wrapper {
+        padding: var(--spacing-lg) var(--spacing-md);
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .page-header h1 {
+        width: 100%; /* Take full width */
+        text-align: center;
+        font-size: var(--font-size-heading3);
+    }
+
+    .header-buttons {
+        width: 100%;
+        justify-content: center; /* Center buttons on mobile */
+    }
+
+    .btn-gradient, .btn-secondary {
+        flex: 1 1 auto; /* Allow buttons to grow and shrink */
+        max-width: 100%; /* Ensure they don't overflow */
+        text-align: center;
+        padding: 10px 15px;
+    }
+
+    .table-container {
+        border-radius: var(--border-radius-sm);
+    }
+
+    .instruction-table {
+        min-width: 600px; /* Reduce minimum width for very small tables */
+    }
+
+    .instruction-table th,
+    .instruction-table td {
+        padding: var(--spacing-sm);
+        font-size: 0.9em;
+    }
+
+    .instruction-table th {
+        font-size: 0.95em;
+    }
+
+    /* Specific column adjustments for smaller screens */
+    .instruction-table td:nth-child(1) { /* Instruction Name */
+        width: 35%; /* Give it more space */
+    }
+    .instruction-table td:nth-child(2) { /* Description */
+        width: 30%;
+        max-width: 200px; /* Limit description width */
+        overflow: hidden;
+        text-overflow: ellipsis; /* Add ellipsis for long descriptions */
+        white-space: nowrap; /* Keep it on one line to use ellipsis */
+    }
+    .instruction-table td:nth-child(3) { /* Status */
+        width: 15%;
+    }
+    .instruction-table td:nth-child(4) { /* Default Checkbox */
+        width: 10%;
+    }
+    .instruction-table td:nth-child(5) { /* Actions */
+        width: 10%;
+    }
+
+
+    .instruction-name {
+        font-size: 1em;
+        white-space: normal; /* Allow name to wrap */
+    }
+
+    .instruction-description {
+        font-size: 0.8em;
+    }
+
+    .status-badge {
+        padding: 5px 8px;
+        font-size: 0.7em;
+        min-width: 60px;
+    }
+
+    .default-checkbox {
+        width: 16px;
+        height: 16px;
+    }
+
+    .actions-cell {
+        flex-direction: row; /* Keep buttons inline for better use of space */
+        justify-content: center;
+        padding: var(--spacing-sm);
+    }
+
+    .inline-form {
+        margin: 0 2px; /* Reduce margin between icons */
+    }
+
+    .btn-action {
+        padding: 6px; /* Smaller icon buttons */
+        font-size: 0.9em;
+    }
+
+    .no-instructions-message {
+        font-size: var(--font-size-body);
+        padding: var(--spacing-md);
+    }
+}
+
+@media (max-width: 500px) { /* Even smaller screens */
+    .manage-instructions-wrapper {
+        padding: var(--spacing-md) var(--spacing-xs);
+    }
+    .page-header h1 {
+        font-size: var(--font-size-body-large);
+    }
+    .header-buttons {
+        gap: var(--spacing-sm);
+    }
+    .btn-gradient, .btn-secondary {
+        font-size: 0.9em;
+    }
+    .instruction-table {
+        min-width: 450px; /* Smallest practical width before it becomes too squished */
+    }
+    .instruction-table th,
+    .instruction-table td {
+        padding: var(--spacing-xs);
+        font-size: 0.8em;
+    }
+    .instruction-description {
+        font-size: 0.75em;
+        max-width: 100px; /* Further limit description width */
+    }
+    .status-badge {
+        padding: 4px 6px;
+        font-size: 0.65em;
+        min-width: 50px;
+    }
+    .btn-action {
+        font-size: 0.8em;
+        padding: 4px;
+    }
+}

@@ -1,0 +1,253 @@
+/* =====================================
+   Signup Page Styles (Designed from Scratch)
+   ===================================== */
+
+/* --- CSS Variables (mimicking landing_page.css but self-contained) --- */
+:root {
+    --color-dark-bg: #1a1a1a; /* Very dark background */
+    --color-card-bg: #2b2b2b; /* Slightly lighter for cards */
+    --color-border: #444; /* Darker border for definition */
+    --color-white: #ffffff;
+    --color-text-light: #f0f0f0; /* Light text for readability */
+    --color-text-secondary: #aaaaaa; /* Muted text for descriptions/help */
+
+    --color-blue-primary: #1a73e8; /* Primary green for accents/buttons */
+    --color-blue-dark: #1a73e8; /* Darker green on hover */
+
+    --spacing-xs: 5px;
+    --spacing-sm: 10px;
+    --spacing-md: 20px;
+    --spacing-lg: 30px;
+    --spacing-xl: 50px;
+
+    --font-size-body: 16px;
+    --font-size-body-large: 18px;
+    --font-size-heading2: 32px;
+    --font-size-heading3: 24px;
+    --font-size-large-btn: 20px;
+
+    --border-radius-sm: 5px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+
+    --transition-speed: 0.3s ease; /* Smooth transitions */
+    --font-family-body: 'Arial', sans-serif; /* Define a default font */
+}
+
+/* --- Global Body Styles --- */
+body {
+    background-color: var(--color-dark-bg);
+    color: var(--color-text-light);
+    margin: 0;
+    font-family: var(--font-family-body);
+    line-height: 1.6; /* Improve readability */
+    -webkit-font-smoothing: antialiased; /* Better font rendering */
+    -moz-osx-font-smoothing: grayscale; /* Better font rendering */
+}
+
+/* --- Auth Wrapper (Page Centering) --- */
+.auth-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Full viewport height */
+    padding: var(--spacing-md);
+    box-sizing: border-box;
+}
+
+/* --- Auth Card (Form Container) --- */
+.auth-card {
+    background-color: var(--color-card-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4); /* Slightly stronger shadow */
+    padding: var(--spacing-lg);
+    max-width: 400px; /* Slightly narrower for a more focused form */
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box; /* Ensure padding is included in width */
+}
+
+/* --- Auth Card Header (Title) --- */
+.auth-card-header {
+    margin-bottom: var(--spacing-md);
+}
+
+.auth-card-header h3 {
+    font-size: var(--font-size-heading2);
+    color: var(--color-white);
+    margin: 0;
+    font-weight: 700; /* Make heading bold */
+}
+
+/* --- Auth Card Body (Form Content Area) --- */
+
+/* --- Form Field Styling (Django's form.as_p) --- */
+.auth-card form p {
+    margin-bottom: var(--spacing-md); /* More space between fields */
+    text-align: left;
+}
+
+.auth-card form label {
+    display: block;
+    margin-bottom: 8px; /* More space below labels */
+    color: var(--color-text-light);
+    font-weight: 600;
+    font-size: var(--font-size-body);
+}
+
+.auth-card form input[type="text"],
+.auth-card form input[type="email"],
+.auth-card form input[type="password"] {
+    width: 100%;
+    padding: 14px 15px; /* Slightly more padding for taller inputs */
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-sm);
+    background-color: var(--color-dark-bg);
+    color: var(--color-text-light);
+    font-size: var(--font-size-body);
+    transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
+    box-sizing: border-box; /* Include padding and border in the element's total width */
+}
+
+.auth-card form input[type="text"]:focus,
+.auth-card form input[type="email"]:focus,
+.auth-card form input[type="password"]:focus {
+    border-color: var(--color-blue-primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.3); /* Slightly stronger focus ring */
+}
+
+/* --- Help Text Styling --- */
+.helptext {
+    display: block;
+    font-size: 0.8em; /* Slightly smaller for subtle hint text */
+    color: var(--color-text-secondary);
+    margin-top: 5px;
+    margin-bottom: 10px;
+    text-align: left;
+}
+
+/* --- Error Message Styling --- */
+.errorlist {
+    color: #ff6347; /* A clear error red */
+    list-style: none;
+    padding: 0;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    font-size: 0.85em; /* Slightly smaller than body for errors */
+    text-align: left;
+}
+.errorlist li {
+    margin-bottom: 3px;
+}
+
+/* --- Password Validation Rules (within helptext/errorlist) --- */
+.helptext ul,
+.errorlist ul {
+    list-style: disc inside;
+    padding-left: 15px;
+    margin-top: 5px;
+    color: var(--color-text-secondary); /* Muted color for rules */
+}
+
+.helptext ul li,
+.errorlist ul li {
+    margin-bottom: 5px;
+}
+
+/* --- Custom Primary Button --- */
+.btn-primary-custom {
+    display: inline-block; /* Behave like a block, but respects content width */
+    width: 100%; /* Full width within its container */
+    padding: 15px 30px;
+    font-size: var(--font-size-body-large); /* Slightly larger font for impact */
+    font-weight: bold;
+    text-align: center;
+    text-decoration: none;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    background-color: var(--color-blue-primary);
+    color: var(--color-white);
+    transition: background-color var(--transition-speed), transform 0.1s ease;
+    margin-top: var(--spacing-lg); /* More space above the button */
+}
+
+.btn-primary-custom:hover {
+    background-color: var(--color-blue-dark);
+    transform: translateY(-1px); /* Slight lift on hover */
+}
+
+.btn-primary-custom:active {
+    transform: translateY(0); /* Press effect */
+}
+
+/* --- Horizontal Rule (Divider) --- */
+.auth-divider {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: var(--spacing-lg) 0; /* More space around the divider */
+}
+
+/* --- Link Text (e.g., "Already have an account?") --- */
+.auth-link-text {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-body);
+    text-align: center;
+    margin-top: var(--spacing-md); /* Space above this text */
+}
+
+.auth-link-text a {
+    color: var(--color--primary);
+    font-weight: 600;
+    text-decoration: none;
+    transition: color var(--transition-speed);
+}
+
+.auth-link-text a:hover {
+    color: var(--color-blue-dark);
+    text-decoration: underline;
+}
+
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 600px) {
+    .auth-wrapper {
+        padding: var(--spacing-sm);
+    }
+    .auth-card {
+        padding: var(--spacing-md);
+        max-width: 95%; /* Allow it to take more width on small screens */
+    }
+    .auth-card-header h3 {
+        font-size: var(--font-size-heading3);
+    }
+    .auth-card form input {
+        padding: 12px 10px;
+        font-size: var(--font-size-body);
+    }
+    .btn-primary-custom {
+        padding: 12px 20px;
+        font-size: var(--font-size-body-large);
+    }
+    .auth-divider {
+        margin: var(--spacing-md) 0;
+    }
+    .auth-link-text {
+        font-size: var(--font-size-body);
+        margin-top: var(--spacing-sm);
+    }
+}
+
+@media (max-width: 400px) {
+    .auth-card {
+        padding: var(--spacing-sm);
+    }
+    .auth-card-header h3 {
+        font-size: var(--font-size-body-large);
+    }
+    .auth-card form p {
+        margin-bottom: var(--spacing-sm);
+    }
+}

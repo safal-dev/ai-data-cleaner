@@ -1,0 +1,679 @@
+/* =====================================
+   0. CSS Variables & Global Resets
+   ===================================== */
+:root {
+    /* Color Palette */
+    --color-dark-bg: #121212;
+    --color-card-bg: #202124;
+    --color-border: #ffffff26;
+    --color-blue-primary: #1a73e8; /* Primary accent green */  /* Darker green for hover */
+    --color-text-light: #f0f0f0;   /* Light text on dark backgrounds */
+    --color-text-secondary: #aaaaaa; /* Secondary/muted text */
+    --color-white: #ffffff;
+    --color-purple-gradient: #d7aefb;
+    --color-blue-gradient: #1a73e8;
+    --gradient-purple-blue: linear-gradient(to right, var(--color-purple-gradient), var(--color-blue-gradient));
+
+    /* Spacing */
+    --spacing-xs: 10px;
+    --spacing-sm: 20px;
+    --spacing-md: 40px;
+    --spacing-lg: 80px;
+    --spacing-xl: 120px;
+
+    /* Font Sizes */
+    --font-size-body: 16px;
+    --font-size-heading1: 48px;
+    --font-size-heading2: 36px;
+    --font-size-heading3: 24px;
+    --font-size-large-btn: 20px;
+    --font-size-nav: 18px;
+    --font-size-footer: 15px;
+
+    /* Border Radius */
+    --border-radius-sm: 5px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 50%; /* For circular elements like icons */
+
+    /* Transitions */
+    --transition-speed: 0.3s ease;
+    --transition-speed-fast: 0.2s ease; /* For hamburger animation */
+}
+
+/* Basic Reset for consistency */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth; /* For smooth scrolling to sections */
+}
+
+body {
+    font-family: 'Work Sans', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--color-dark-bg);
+    color: var(--color-text-light);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased; /* Better font rendering */
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Base text styles */
+p {
+    margin-bottom: var(--spacing-sm);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--color-white);
+    margin-bottom: var(--spacing-sm);
+    line-height: 1.2;
+}
+
+a {
+    color: var(--color-blue-primary);
+    text-decoration: none;
+    transition: color var(--transition-speed);
+}
+
+a:hover {
+    color: var(--color-green-dark);
+    text-decoration: underline;
+}
+
+/* Container for consistent width */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-sm); /* Horizontal padding */
+}
+
+/* Section Spacing */
+section {
+    padding: var(--spacing-lg) 0; /* Vertical spacing between sections */
+}
+
+
+/* =====================================
+   1. Header & Navigation Styles
+   ===================================== */
+.main-header {
+    background-color: var(--color-dark-bg);
+    padding: var(--spacing-sm) 0;
+    border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.main-header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.main-header .logo {
+    font-size: var(--font-size-heading3);
+    font-weight: bold;
+    color: var(--gradient-purple-blue);
+    text-decoration: none;
+    display: flex; /* Make logo a flex container */
+    align-items: center; /* Vertically align icon and text */
+    gap: 8px; /* Space between icon and text */
+}
+
+.main-header .logo .fas.fa-gem { /* Style for the diamond icon */
+    font-size: 20px; /* Adjust size if needed */
+    color: var(--color-blue-primary); /* Ensure icon is green */
+    line-height: 1; /* Helps with vertical alignment */
+}
+
+
+.main-nav {
+    display: flex;
+    align-items: center;
+}
+
+.main-nav .nav-links { /* Desktop nav styles */
+    list-style: none;
+    display: flex;
+    gap: var(--spacing-md);
+    margin: 0; /* Reset margin from global ul */
+    padding: 0; /* Reset padding from global ul */
+    align-items: center; /* Align nav items including the button */
+}
+
+.main-nav .nav-links li a {
+    color: var(--color-text-light);
+    font-size: var(--font-size-nav);
+    font-weight: 500;
+    transition: color var(--transition-speed);
+    padding: 5px 15px; /* Add padding for clickable area */
+}
+
+.main-nav .nav-links li a:hover {
+    color: var(--color-blue-primary);
+}
+
+/* Hamburger Menu Styles */
+.hamburger-menu {
+    display: none; /* Hidden by default on desktop */
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 10px;
+    position: relative;
+    z-index: 1001; /* Ensure it's above everything */
+}
+
+.hamburger-menu .bar {
+    display: block;
+    width: 25px;
+    height: 3px;
+    background-color: var(--color-blue-primary); /* Green bars */
+    margin: 5px 0;
+    transition: all var(--transition-speed-fast);
+}
+
+/* Hamburger Animation (X transform) */
+.hamburger-menu.active .bar:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+}
+.hamburger-menu.active .bar:nth-child(2) {
+    opacity: 0;
+}
+.hamburger-menu.active .bar:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+}
+
+
+/* =====================================
+   2. Button Styles (General)
+   ===================================== */
+.btn-gradient {
+    background: var(--gradient-purple-blue);
+    color: var(--color-white); /* Text color should be white on this dark gradient */
+    border-radius: 50px; /* Highly rounded corners as seen in image_2bce16.png */
+    padding: 15px 50px; /* Adjust padding to make it wider and taller */
+    font-size: var(--font-size-large-btn); /* Or adjust as needed for "Try now" */
+    display: inline-flex; /* Use flexbox to align text and icon */
+    align-items: center; /* Vertically center content */
+    gap: 10px; /* Space between text and icon */
+    font-weight: bold; /* Bold text as in image_2bce16.png */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Add transition for hover effect */
+}
+
+.btn-gradient:hover {
+    /* Slightly scale up or add a subtle shadow on hover */
+    transform: translateY(-2px); /* Slight lift */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4); /* More pronounced shadow */
+    /* You could also slightly adjust the gradient for a subtle effect on hover */
+    /* background: linear-gradient(to right, #e0baff, #2a83f8); */
+}
+
+
+/* =====================================
+   3. Hero Section Styles
+   ===================================== */
+.hero-section {
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    color: var(--color-white);
+    display: flex; /* Use flexbox to center the content box */
+    justify-content: center; /* Horizontally center its direct children */
+    align-items: center; /* Vertically center its direct children */
+    min-height: 90vh; /* Make it taller to fill the screen initially, adjust as needed */
+    padding: var(--spacing-sm); /* Add some overall padding so content doesn't touch edges on small screens */
+}
+
+/* We don't need a .hero-section .container style if hero-content-box is direct child */
+
+
+.hero-content-box { /* STYLES FOR THE CENTRAL BOX */
+    background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('../images/hero_bg.jpg'); /* This covers the full section background */
+    background-size: cover;
+    padding: var(--spacing-lg) var(--spacing-md); /* Internal padding for content inside the box */
+    border-radius: var(--border-radius-md); /* Rounded corners */
+    max-width: 1200px; /* Max width of the content box */
+    height: 60vh; /* Set a fixed height for the box as in your example */
+    width: 90%; /* Responsive width */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); /* Subtle shadow */
+    border: 1px solid var(--color-border); /* Subtle border for definition */
+    text-align: center; /* Center text and button inside the box */
+
+    /* To center content vertically within the fixed height box */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Vertically center the content */
+    align-items: center; /* Horizontally center the content (takes precedence over text-align) */
+}
+
+.hero-content-box h1 {
+    font-size: var(--font-size-heading1);
+    margin-bottom: var(--spacing-sm);
+    font-weight: 700;
+    color: var(--color-white);
+}
+
+.hero-content-box p {
+    font-size: 20px;
+    margin-bottom: var(--spacing-md);
+    color: var(--color-text-secondary);
+    max-width: 700px; /* Constrain paragraph width within the box */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+/* =====================================
+   4. Supported Files Section Styles
+   ===================================== */
+.supported-files-section {
+    background-color: var(--color-dark-bg);
+    text-align: center; /* For heading and paragraph */
+    padding-bottom: var(--spacing-lg); /* Ensure space below cards */
+}
+
+.supported-files-section h2 {
+    font-size: var(--font-size-heading2);
+    margin-bottom: var(--spacing-sm);
+}
+
+.supported-files-section > p { /* Target direct child p */
+    font-size: var(--font-size-nav);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-lg);
+}
+
+.file-types-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Adjusted min-width for responsiveness */
+    gap: var(--spacing-sm); /* Reduced gap slightly */
+}
+
+.file-type-card {
+    background-color: var(--color-card-bg);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    text-align: left;
+    border: 1px solid var(--color-border);
+    display: flex; /* For icon and text alignment */
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.file-type-card .icon {
+    width: 60px; /* Slightly larger icon */
+    height: 60px;
+    background-color: var(--color-blue-primary);
+    border-radius: var(--border-radius-lg);
+    margin-bottom: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px; /* For Font Awesome icons */
+    color: var(--color-white);
+}
+/* If using actual images for icons: */
+.file-type-card .icon img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: var(--border-radius-lg);
+}
+
+
+.file-type-card h3 {
+    font-size: var(--font-size-heading3);
+    margin-bottom: var(--spacing-xs);
+    color: var(--color-white);
+}
+
+.file-type-card p {
+    font-size: var(--font-size-body);
+    color: var(--color-text-secondary);
+    margin-bottom: 0;
+}
+
+
+/* =====================================
+   5. Key Features Section Styles
+   ===================================== */
+.key-features-section {
+    text-align: center;
+    background-color: var(--color-dark-bg);
+}
+
+.key-features-section h2 {
+    font-size: var(--font-size-heading2);
+    margin-bottom: var(--spacing-lg);
+}
+
+.features-grid {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+
+.feature-card {
+    background-color: var(--color-card-bg);
+    padding: 25px 35px; /* Slightly adjusted padding */
+    border-radius: var(--border-radius-md);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-blue-primary);
+    border: 1px solid var(--color-border);
+    flex: 1 1 auto;
+    max-width: 320px; /* Slightly adjusted max-width */
+    text-align: center;
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+}
+
+.feature-card:hover {
+    transform: translateY(-5px); /* Simple hover effect */
+    box-shadow: 0 10px 20px rgba(0, 255, 0, 0.1); /* Greenish shadow */
+}
+
+
+/* =====================================
+   6. Workflow Section Styles
+   ===================================== */
+.workflow-section h2 {
+    margin-bottom: var(--spacing-lg); /* Adjusted for space above the grid */
+}
+
+/* New styles for the workflow grid container */
+.workflow-grid { /* Applies to the <ol> element now */
+    list-style: none; /* Remove default list numbering */
+    padding: 0;
+    display: grid; /* Use CSS Grid for the layout */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive columns */
+    gap: var(--spacing-sm); /* Gap between the cards */
+    max-width: 1200px; /* Constrain overall width if needed */
+    margin: 0 auto; /* Center the grid */
+}
+
+.workflow-grid li { /* Each <li> becomes a card */
+    background-color: var(--color-card-bg); /* Use a dark background for the card */
+    padding: var(--spacing-md); /* Internal padding for content */
+    border-radius: var(--border-radius-md); /* Rounded corners for the card */
+    border: 1px solid var(--color-border); /* Subtle border for definition */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+    text-align: left; /* Align content to the left within the card */
+    display: flex;
+    flex-direction: column; /* Stack content vertically */
+    justify-content: space-between; /* Push icon/title to top, link to bottom */
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    height: 100%; /* Ensure cards have equal height in grid */
+}
+
+.workflow-grid li:hover {
+    transform: translateY(-5px); /* Slight lift on hover */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); /* Enhanced shadow on hover */
+    border-color: var(--color-blue-primary); /* Highlight border on hover */
+}
+
+.workflow-icon-placeholder {
+    width: 60px; /* Size for your Lottie container, matching the example's icons */
+    height: 60px;
+    margin-bottom: var(--spacing-sm); /* Space below the icon */
+    display: flex; /* For centering content (like a Font Awesome icon) */
+    align-items: center;
+    justify-content: center;
+    /* No background or border here, as the example icons are just line art */
+    color: var(--color-blue-primary); /* Color for the placeholder icon */
+    font-size: 36px; /* Size for the placeholder icon */
+}
+
+.workflow-grid li h3 { /* Styling for the bold title */
+    font-size: var(--font-size-heading3); /* Matches the example's title size */
+    margin-bottom: var(--spacing-xs); /* Space below title */
+    color: var(--color-white); /* Ensure title is white */
+    font-weight: 600; /* Adjust weight as needed */
+}
+
+.workflow-grid li p { /* Styling for the description paragraph */
+    font-size: var(--font-size-body); /* Matches general body text size */
+    color: var(--color-text-secondary); /* Muted text color */
+    margin-bottom: var(--spacing-md); /* Space above the "See demo" link */
+    flex-grow: 1; /* Allows paragraph to take up available space, pushing link to bottom */
+}
+
+.see-demo-link {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: var(--font-size-body); /* Or smaller if preferred */
+    color: var(--color-blue-primary); /* Green color for the link */
+    text-decoration: none; /* No underline by default */
+    transition: color var(--transition-speed);
+    margin-top: auto; /* Pushes the link to the bottom of the card */
+}
+
+.see-demo-link:hover {
+    color: var(--color-green-dark); /* Darker green on hover */
+    text-decoration: underline; /* Underline on hover */
+}
+
+.see-demo-link .fas.fa-external-link-alt {
+    font-size: 0.8em; /* Smaller icon size relative to text */
+}
+
+
+/* Remove the old workflow-section ol li::before and related styles */
+/* as we are no longer using numbered list styling but card layout */
+
+/* =====================================
+   7. Impact & Vision Sections Styles
+   ===================================== */
+
+
+
+/* =====================================
+   8. Final CTA Section Styles
+   ===================================== */
+.final-cta-section {
+    background-color: var(--color-card-bg);
+    text-align: center;
+    padding-bottom: var(--spacing-lg);
+}
+
+.final-cta-section h2 {
+    font-size: var(--font-size-heading2);
+    margin-bottom: var(--spacing-sm);
+}
+
+.final-cta-section p {
+    font-size: var(--font-size-nav);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-md);
+}
+
+
+/* =====================================
+   9. Footer Styles
+   ===================================== */
+.main-footer {
+    background-color: var(--color-dark-bg);
+    padding: var(--spacing-md) 0;
+    border-top: 1px solid var(--color-border);
+    text-align: center;
+}
+
+.main-footer .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.footer-nav ul {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--spacing-sm);
+}
+
+.footer-nav ul li a {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-footer);
+    transition: color var(--transition-speed);
+}
+
+.footer-nav ul li a:hover {
+    color: var(--color-blue-primary);
+}
+
+.social-links {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.social-links a {
+    color: var(--color-text-secondary);
+    font-size: 24px;
+    transition: color var(--transition-speed);
+}
+
+.social-links a:hover {
+    color: var(--color-blue-primary);
+}
+
+.copyright {
+    font-size: var(--font-size-footer);
+    color: var(--color-text-secondary);
+    margin-top: var(--spacing-sm);
+}
+
+
+/* =====================================
+   10. Responsive Adjustments (Media Queries)
+   ===================================== */
+@media (max-width: 992px) {
+    :root {
+        --font-size-heading1: 42px;
+        --font-size-heading2: 32px;
+        --spacing-lg: 60px;
+        --spacing-xl: 100px;
+    }
+    .hero-section p {
+        font-size: 18px;
+    }
+    .main-nav .nav-links {
+        gap: var(--spacing-sm);
+    }
+}
+
+@media (max-width: 768px) {
+    /* Main navigation for mobile (hamburger menu visible) */
+    .main-nav .nav-links {
+        display: none; /* Hidden by default */
+        flex-direction: column;
+        position: absolute;
+        top: 100%; /* Position below the header */
+        left: 0;
+        width: 100%;
+        background-color: var(--color-dark-bg);
+        border-top: 1px solid var(--color-border);
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
+        padding: var(--spacing-sm) 0;
+        align-items: center; /* Center links in column */
+        transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+        transform: translateY(-10px); /* Start slightly off screen */
+        opacity: 0;
+        pointer-events: none; /* Prevent interaction when hidden */
+    }
+
+    .main-nav .nav-links.active {
+        display: flex; /* Show when active */
+        transform: translateY(0); /* Slide into view */
+        opacity: 1;
+        pointer-events: auto; /* Allow interaction */
+    }
+
+    .main-nav .nav-links li {
+        width: 100%; /* Make list items take full width */
+        text-align: center;
+        padding: 5px 0;
+    }
+
+    .main-nav .nav-links li a {
+        padding: 10px 0; /* More padding for mobile tap targets */
+        display: block; /* Make the whole area clickable */
+        width: 100%;
+    }
+
+    .main-nav .nav-links li:last-child { /* Style for the Get Started button in mobile menu */
+        margin-top: var(--spacing-sm); /* Add space above the button */
+    }
+
+    .main-nav .nav-links li:last-child .btn {
+        width: calc(100% - var(--spacing-md)); /* Button width with padding */
+        margin: 0 auto; /* Center the button */
+        font-size: var(--font-size-nav);
+    }
+
+    .hamburger-menu {
+        display: block; /* Show hamburger on mobile */
+    }
+
+    /* General responsive adjustments for 768px breakpoint */
+    :root {
+        --font-size-heading1: 36px;
+        --font-size-heading2: 28px;
+        --spacing-md: 30px;
+        --spacing-lg: 40px;
+        --spacing-xl: 80px;
+    }
+}
+
+@media (max-width: 576px) {
+    :root {
+        --font-size-heading1: 30px;
+        --font-size-heading2: 24px;
+        --spacing-sm: 15px;
+        --spacing-md: 25px;
+        --spacing-lg: 30px;
+    }
+    .container {
+        padding: 0 var(--spacing-xs);
+    }
+    .main-header .logo {
+        font-size: 20px;
+    }
+    .btn {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+    .large-btn {
+        padding: 10px 25px;
+        font-size: 16px;
+    }
+    .file-type-card {
+        padding: var(--spacing-sm);
+    }
+    .file-type-card .icon {
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+    }
+    .file-type-card h3 {
+        font-size: 20px;
+    }
+    .feature-card {
+        padding: 20px 25px;
+        font-size: 16px;
+    }
+    .workflow-section ol li {
+        padding: var(--spacing-sm);
+    }
+    .workflow-section ol li strong {
+        font-size: 18px;
+    }
+    .main-footer .footer-nav ul {
+        gap: var(--spacing-xs);
+    }
+}

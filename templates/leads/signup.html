@@ -1,0 +1,27 @@
+{% extends 'leads/base.html' %}
+{% load static %}
+
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/signup.css' %}">
+    {# If you need to override any base.html styles that conflict, place signup.css after base.css if you have one #}
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-card-header">
+            <h3>Sign Up</h3>
+        </div>
+        <div class="auth-card-body">
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary-custom">Sign Up</button> {# Using a new custom button class #}
+            </form>
+            <hr class="auth-divider" />
+            <p class="auth-link-text">Already have an account? <a href="{% url 'signin' %}">Sign In here</a>.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
