@@ -1,0 +1,29 @@
+{% extends 'leads/base.html' %}
+{% load static %}
+
+
+{% block extra_css %}
+    {# We're reusing the signup.css for consistent authentication page styling #}
+    <link rel="stylesheet" href="{% static 'css/signup.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-card-header">
+            <h3>Sign In</h3>
+        </div>
+        <div class="auth-card-body">
+            {# The form action typically defaults to the current URL for POST requests #}
+            <form method="post">
+                {% csrf_token %}
+                {# Render form fields (username, password) #}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary-custom">Sign In</button>
+            </form>
+            <hr class="auth-divider" />
+            <p class="auth-link-text">Don't have an account? <a href="{% url 'signup' %}">Sign Up here</a>.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

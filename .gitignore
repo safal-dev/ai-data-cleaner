@@ -1,0 +1,22 @@
+# Python
+*.pyc
+__pycache__/
+db.sqlite3
+
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+staticfiles/
+local_settings.py
+
+# Environment
+.env
+env/
+
+# VSCode
+.vscode/
+
+# Migrations
+**/migrations/

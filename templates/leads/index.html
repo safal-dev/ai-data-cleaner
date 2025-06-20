@@ -1,0 +1,129 @@
+{% extends 'leads/base.html' %}
+{% load static %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/landing_page.css' %}">
+{% endblock %}
+
+{% block content %}
+    <header class="main-header">
+        <div class="container">
+            <a href="{% url 'index' %}" class="logo">
+                <i class="fas fa"></i> {# Font Awesome diamond icon #}
+                Lead Cleaner
+            </a>
+
+            <nav class="main-nav">
+                <button class="hamburger-menu" aria-label="Toggle navigation">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+                <ul class="nav-links">
+                    <li><a href="{% url 'signin' %}" class="btn-gradient">Get Started</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    {# Rest of your index.html content (Hero, Supported Files, etc.) remains the same #}
+    <section id="hero-section" class="hero-section">
+            <div class="hero-content-box"> {# NEW DIV HERE #}
+                <h1>AI-Powered Lead Cleaning</h1>
+                <p>effortlessly clean and organize your leads from excel, text and image files with our advanced AI technology.</p>
+                <a href="{% url 'signin' %}" class="btn-gradient">Upload Files</a>
+            </div> {# END NEW DIV #}
+    </section>
+
+    <section id="supported-files-section" class="supported-files-section">
+        <div class="container">
+            <h2>Supported File Types</h2>
+            <p>Our application supports a variety of file types to ensure flexibility and ease of use.</p>
+            <div class="file-types-grid">
+                <div class="file-type-card">
+                    <div class="icon"><i class="fas fa-file-excel"></i></div>
+                    <h3>Excel Files</h3>
+                    <p>Upload .xls/.xlsx files to clean in a structured table for accurate cleaning.</p>
+                </div>
+                <div class="file-type-card">
+                    <div class="icon"><i class="fas fa-file-alt"></i></div>
+                    <h3>Text Files</h3>
+                    <p>Upload .txt files or paste raw text, ensuring all information is extracted.</p>
+                </div>
+                <div class="file-type-card">
+                    <div class="icon"><i class="fas fa-image"></i></div>
+                    <h3>Image Files</h3>
+                    <p>Upload .jpg, .png files and extract leads from images using multimodal AI technology.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="workflow-section" class="workflow-section">
+        <div class="container">
+            <h2>Workflow</h2>
+            <ol class="workflow-grid"> {# ADD CLASS HERE for grid styling #}
+                <li>
+                    <div class="workflow-icon-placeholder">
+                        {# This is where your Lottie animation will go, e.g., <lottie-player> element #}
+                        {# For now, a simple placeholder div #}
+                        <i class="fas fa-upload"></i> {# Placeholder icon #}
+                    </div>
+                    <h3>Upload Files</h3> {# Changed from strong to h3 for semantic structure and styling #}
+                    <p>Upload your files from Excel, text, or image formats.</p>
+
+                </li>
+                <li>
+                    <div class="workflow-icon-placeholder">
+                        <i class="fas fa-robot"></i> {# Placeholder icon #}
+                    </div>
+                    <h3>AI Cleaning</h3>
+                    <p>Our AI algorithms automatically clean and organize your leads.</p>
+
+                </li>
+                <li>
+                    <div class="workflow-icon-placeholder">
+                        <i class="fas fa-download"></i> {# Placeholder icon #}
+                    </div>
+                    <h3>Download Cleaned Leads</h3>
+                    <p>Download your cleaned leads in your preferred format.</p>
+
+                </li>
+            </ol>
+        </div>
+    </section>
+
+    <section id="final-cta-section" class="final-cta-section">
+        <div class="container">
+            <h2>Ready to Clean Your Leads?</h2>
+            <p>Start cleaning your leads today and experience the power of AI.</p>
+            <a href="{% url 'signin' %}" class="btn-gradient">Get Started</a>
+        </div>
+    </section>
+
+
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const hamburger = document.querySelector('.hamburger-menu');
+            const navLinks = document.querySelector('.nav-links');
+
+            hamburger.addEventListener('click', function() {
+                navLinks.classList.toggle('active');
+                hamburger.classList.toggle('active');
+            });
+
+            // Close menu when a link is clicked (for smooth scrolling)
+            navLinks.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    // Check if the clicked link is not the "Get Started" button (which might have its own JS redirect)
+                    if (!link.classList.contains('btn')) {
+                        navLinks.classList.remove('active');
+                        hamburger.classList.remove('active');
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

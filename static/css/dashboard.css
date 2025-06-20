@@ -1,0 +1,318 @@
+/* =====================================
+   Dashboard Styles - Minimalist Version
+   ===================================== */
+
+/* --- Root Variables (assuming from landing_page.css) --- */
+/*
+:root {
+    --color-dark-bg: #1a1a1a;
+    --color-card-bg: #2a2a2a;
+    --color-border: #444;
+    --color-text-light: #f0f0f0;
+    --color-text-secondary: #aaa;
+    --color-white: #ffffff;
+    --color-blue-primary: #6c63ff;
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 48px;
+    --font-size-body: 1rem;
+    --font-size-body-large: 1.15rem;
+    --font-size-heading2: 2rem;
+    --font-size-heading3: 1.5rem;
+    --border-radius-md: 8px;
+    --transition-speed: 0.3s ease;
+}
+*/
+
+/* --- Main Dashboard Wrapper --- */
+.dashboard-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: var(--color-dark-bg);
+    color: var(--color-text-light);
+}
+
+/* --- Main Content Area --- */
+.dashboard-main-content {
+    flex-grow: 1;
+    padding: var(--spacing-xl) var(--spacing-lg); /* Adjust overall padding for desktop */
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- Dashboard Header (for Instruction Config Button) --- */
+.dashboard-header-minimal {
+    display: flex;
+    justify-content: flex-end; /* Pushes the button to the right */
+    align-items: center;
+    padding-top: var(--spacing-md);
+    margin-bottom: var(--spacing-xl); /* Space below button before options */
+}
+
+/* --- Instruction Configuration Button --- */
+.dashboard-config-btn {
+    font-size: var(--font-size-body-large);
+    padding: 12px 30px;
+    white-space: nowrap;
+    text-decoration: none; /* Ensure no underline on link */
+    /* Inherits most styles from .btn-gradient from landing_page.css */
+}
+
+/* --- Processing Options Container (2-Column Layout, Center-Aligned) --- */
+.processing-options-container-minimal {
+    flex-grow: 1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center; /* Vertically centers the cards within this section */
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl); /* Space below options before instruction box */
+    padding: 0 var(--spacing-md); /* Add horizontal padding to this container */
+}
+
+/* --- Individual Processing Option Card --- */
+.processing-option-card {
+    background-color: var(--color-card-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    padding: var(--spacing-lg);
+    flex: 1 1 calc(50% - var(--spacing-md)); /* Adjusted flex basis for gap */
+    max-width: 450px;
+    text-align: center;
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    box-sizing: border-box;
+}
+
+.processing-option-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+}
+
+.processing-option-card .option-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.option-icon {
+    width: 80px;
+    height: 80px;
+    margin-bottom: var(--spacing-md);
+    filter: invert(1); /* Makes black icons white */
+    opacity: 0.8;
+    transition: opacity var(--transition-speed);
+}
+
+.processing-option-card:hover .option-icon {
+    opacity: 1;
+}
+
+.processing-option-card h3 {
+    font-size: var(--font-size-heading3);
+    color: var(--color-white);
+    margin-bottom: var(--spacing-sm);
+    font-weight: 600;
+}
+
+.processing-option-card p {
+    font-size: var(--font-size-body);
+    color: var(--color-text-secondary);
+    margin-bottom: 0;
+}
+
+/* --- Instruction Box Styling --- */
+.instruction-box {
+    background-color: var(--color-card-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    margin-top: var(--spacing-xl);
+    text-align: left;
+    max-width: 1200px; /* Overall max width of the box */
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
+    padding: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center; /* Center content horizontally within the box */
+    min-height: 250px;
+    max-height: 400px;
+}
+
+.instruction-box-heading {
+    font-size: var(--font-size-heading2);
+    color: var(--color-white);
+    margin-top: 0;
+    margin-bottom: var(--spacing-md);
+    text-align: center; /* Center the heading within the box */
+    width: 100%;
+}
+
+.instruction-list {
+    list-style-type: decimal;
+    padding-left: var(--spacing-md); /* Reduced indent for list items */
+    margin: 0;
+    width: 100%;
+    max-width: 900px; /* Explicit max-width for the list content itself */
+    text-align: left;
+}
+
+.instruction-list li {
+    font-size: var(--font-size-body);
+    color: var(--color-text-light);
+    margin-bottom: var(--spacing-sm);
+    line-height: 1.6;
+}
+
+
+/* =====================================
+   Responsive Adjustments (Mobile First Approach)
+   ===================================== */
+
+/* Default styles (for mobile first or smallest screens) */
+@media (max-width: 576px) { /* Adjust for typical phone screens (e.g., iPhone SE/mini) */
+    .dashboard-main-content {
+        padding: var(--spacing-md) var(--spacing-sm); /* More horizontal padding on very small screens */
+    }
+
+    .dashboard-header-minimal {
+        margin-bottom: var(--spacing-lg);
+        justify-content: center; /* Center the button on small screens */
+        padding-top: var(--spacing-sm);
+    }
+
+    .dashboard-config-btn {
+        width: 90%; /* Take almost full width */
+        max-width: 280px; /* But don't get too wide */
+        font-size: var(--font-size-body);
+        padding: 10px 15px;
+    }
+
+    .processing-options-container-minimal {
+        flex-direction: column; /* Stack cards vertically */
+        gap: var(--spacing-lg); /* Space between stacked cards */
+        margin-bottom: var(--spacing-lg);
+        padding: 0; /* Remove horizontal padding here as main content provides it */
+    }
+
+    .processing-option-card {
+        flex: 1 1 90%; /* Take nearly full width when stacked */
+        max-width: 350px; /* Limit max width for stacked cards */
+        padding: var(--spacing-md); /* Smaller padding inside cards */
+    }
+
+    .option-icon {
+        width: 60px; /* Smaller icons on mobile */
+        height: 60px;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .processing-option-card h3 {
+        font-size: var(--font-size-body-large); /* Slightly smaller heading */
+    }
+
+    .processing-option-card p {
+        font-size: var(--font-size-body); /* Standard body font size */
+    }
+
+    .instruction-box {
+        padding: var(--spacing-md); /* Reduced padding for instruction box */
+        margin-top: var(--spacing-lg);
+        margin-bottom: var(--spacing-lg);
+        min-height: auto; /* Allow height to adjust naturally on very small screens */
+        max-height: 250px; /* Still apply a max-height with overflow */
+    }
+
+    .instruction-box-heading {
+        font-size: var(--font-size-heading3); /* Smaller heading for instruction box */
+        margin-bottom: var(--spacing-md);
+    }
+
+    .instruction-list {
+        padding-left: var(--spacing-sm); /* Adjusted padding for list */
+        max-width: 100%; /* Allow full width of content for readability */
+    }
+
+    .instruction-list li {
+        font-size: 0.9em; /* Slightly smaller text for list items */
+        margin-bottom: var(--spacing-xs);
+    }
+}
+
+@media (min-width: 577px) and (max-width: 768px) { /* Tablets and larger phones (e.g., iPad Mini, larger phones in landscape) */
+    .dashboard-main-content {
+        padding: var(--spacing-lg);
+    }
+    .dashboard-config-btn {
+        max-width: 250px; /* A bit wider than small mobile */
+        font-size: var(--font-size-body-large);
+        padding: 10px 20px;
+    }
+    .processing-options-container-minimal {
+        gap: var(--spacing-md);
+        flex-direction: row; /* Keep them side-by-side if enough space */
+        justify-content: center;
+    }
+    .processing-option-card {
+        flex: 1 1 calc(50% - var(--spacing-md)); /* Keep 2 columns */
+        max-width: 380px; /* Allow cards to grow a bit */
+        padding: var(--spacing-lg);
+    }
+    .option-icon {
+        width: 70px;
+        height: 70px;
+    }
+    .instruction-box {
+        padding: var(--spacing-lg);
+        min-height: 220px;
+        max-height: 300px;
+    }
+    .instruction-list {
+        max-width: 80%; /* Still constrain text width */
+    }
+}
+
+
+@media (min-width: 769px) and (max-width: 992px) { /* Small laptops, larger tablets */
+    .dashboard-main-content {
+        padding: var(--spacing-xl);
+    }
+    .dashboard-config-btn {
+        max-width: 300px;
+        font-size: var(--font-size-heading3);
+        padding: 12px 25px;
+    }
+    .processing-options-container-minimal {
+        gap: var(--spacing-lg);
+    }
+    .processing-option-card {
+        flex: 1 1 calc(50% - var(--spacing-lg));
+        max-width: 420px;
+    }
+    .option-icon {
+        width: 75px;
+        height: 75px;
+    }
+    .instruction-box {
+        padding: var(--spacing-xl);
+        min-height: 250px;
+        max-height: 350px;
+    }
+    .instruction-list {
+        max-width: 700px; /* Wider content for readability */
+    }
+}
+
+/* Desktop and larger screens (min-width: 993px) - No specific media query needed if default styles are for desktop */
+/* The general styles at the top of the CSS file will apply for these larger screens. */

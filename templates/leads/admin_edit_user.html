@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin - Edit User{% endblock %}
+
+{% block content %}
+    <div class="header">
+        <h1>Edit User: {{ user_to_edit.username }}</h1>
+        <a href="{% url 'admin_user_management' %}" class="button-secondary">Back to User Management</a>
+    </div>
+
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <form method="post" action="{% url 'admin_edit_user' pk=pk %}">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" name="username" id="username" required value="{{ form_username }}">
+        </div>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" name="email" id="email" required value="{{ form_email }}">
+        </div>
+        <div class="form-group">
+            <label for="monthly_quota">Monthly Clean Quota:</label>
+            <input type="number" name="monthly_quota" id="monthly_quota" required value="{{ form_monthly_quota }}">
+            <small class="form-text text-muted">Current cleans this month: {{ profile.cleans_this_month }}</small>
+        </div>
+        <div class="form-group">
+            <input type="checkbox" name="is_admin" id="is_admin" {% if form_is_admin_status %}checked{% endif %}>
+            <label for="is_admin" style="display: inline; margin-left: 5px;">Grant Admin Privileges</label>
+        </div>
+        
+        <button type="submit" class="button-primary">Save Changes</button>
+    </form>
+{% endblock %}

@@ -1,0 +1,116 @@
+/* General container for the create/edit instruction page */
+.create-instruction-wrapper {
+    max-width: 800px; /* Adjust as needed for width */
+    margin: 40px auto; /* Centers the container and adds vertical spacing */
+    padding: 30px;
+    background-color: #1a1a1a; /* Darker background for the form container */
+    border-radius: 10px; /* Slightly rounded corners for the container */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */
+}
+
+/* Page title styling */
+.page-title {
+    text-align: left; /* Aligns the "Create Instruction" or "Edit Instruction" title to the left */
+    margin-bottom: 30px; /* Space below the title */
+}
+
+.page-title h1 {
+    font-size: 2.2em; /* Larger font size for the main title */
+    color: #f0f0f0; /* Light color for the text against the dark background */
+    margin-bottom: 0;
+    font-weight: 600; /* Slightly bolder font weight */
+}
+
+/* Form group styling (for each label/input pair) */
+.instruction-form .form-group {
+    margin-bottom: 25px; /* Space between form fields */
+}
+
+.instruction-form label {
+    display: block; /* Makes the label take up its own line */
+    margin-bottom: 8px; /* Space between label and its input field */
+    font-size: 1.1em; /* Slightly larger font for labels */
+    color: #b0b0b0; /* A lighter grey for labels to stand out from background */
+    font-weight: 500;
+}
+
+.instruction-form input[type="text"],
+.instruction-form textarea {
+    width: calc(100% - 20px); /* Full width minus padding for consistency */
+    padding: 12px 10px; /* Padding inside the input/textarea */
+    border: 1px solid #333; /* Darker border for the input fields */
+    border-radius: 8px; /* Rounded corners for inputs */
+    background-color: #2a2a2a; /* Dark background for inputs, slightly lighter than container */
+    color: #f0f0f0; /* Light text color for user input */
+    font-size: 1em;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for focus effects */
+}
+
+.instruction-form input[type="text"]:focus,
+.instruction-form textarea:focus {
+    border-color: #6699ff; /* Blue border on focus, matches button gradient start */
+    box-shadow: 0 0 8px rgba(102, 153, 255, 0.4); /* Glow effect on focus */
+    outline: none; /* Removes default browser outline */
+}
+
+.instruction-form textarea {
+    resize: vertical; /* Allows the user to resize the textarea vertically */
+    min-height: 150px; /* Minimum height for the instructions textarea */
+}
+
+/* Save button styling */
+.btn-save {
+    display: block; /* Makes the button a block element */
+    width: fit-content; /* Button width adjusts to its content */
+    margin-left: auto; /* Pushes the button to the far right */
+    padding: 12px 30px; /* Padding inside the button */
+    background: linear-gradient(135deg, #6a82fb, #fc5c7d); /* Gradient background as seen in images */
+    border: none; /* No default border */
+    border-radius: 25px; /* Highly rounded corners for a pill shape */
+    color: white; /* White text color */
+    font-size: 1.1em; /* Slightly larger font for the button text */
+    font-weight: 600; /* Bolder text */
+    cursor: pointer; /* Indicates it's clickable */
+    transition: transform 0.2s ease, box-shadow 0.2s ease; /* Smooth hover effects */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Initial subtle shadow */
+}
+
+.btn-save:hover {
+    transform: translateY(-2px); /* Lifts the button slightly on hover */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); /* Enhanced shadow on hover */
+}
+
+/* Error message styling (for Django form errors) */
+.error-message {
+    color: #ff6b6b; /* Reddish color for error messages */
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+/* Basic styling for the main-header, assuming it's consistent across pages */
+/* Ensure the .main-header from base.html or a common CSS file provides the dark background */
+body {
+    background-color: #121212; /* Very dark background for the entire page */
+    font-family: 'Arial', sans-serif; /* Or your preferred font-family */
+    color: #f0f0f0; /* Default text color for the body */
+}
+
+/* Adjustments for the main-header specifically for this page if needed */
+/* These styles should largely come from your landing_page.css or a global CSS file */
+.main-header .container {
+    padding: 15px 30px;
+}
+.main-header .logo {
+    color: #f0f0f0;
+    font-size: 1.8em;
+}
+.main-header .logo i {
+    color: #6a82fb; /* Blue diamond icon */
+}
+.main-nav .nav-links a {
+    color: #b0b0b0;
+}
+.main-nav .nav-links .btn-gradient {
+    background: linear-gradient(135deg, #6a82fb, #fc5c7d);
+    color: white;
+}

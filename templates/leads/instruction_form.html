@@ -1,0 +1,89 @@
+{% extends 'leads/base.html' %}
+{% load static %}
+
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/landing_page.css' %}"> {# Keep if main header styling is needed #}
+    <link rel="stylesheet" href="{% static 'css/create_instruction.css' %}"> {# Keep this CSS file, but now it styles the combined form #}
+{% endblock %}
+
+{% block content %}
+ <header class="main-header">
+        <div class="container">
+            <a href="{% url 'index' %}" class="logo">
+                <i class="fas fa"></i> {# Font Awesome diamond icon #}
+                Lead Cleaner
+            </a>
+
+            <nav class="main-nav">
+                <button class="hamburger-menu" aria-label="Toggle navigation">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+                <ul class="nav-links">
+                    <li><a href="#features-section">Features</a></li>
+                    <li><a href="#pricing-section">Pricing</a></li>
+                    <li><a href="#support-section">Support</a></li>
+                    <li><a href="{% url 'manage_instructions' %}" class="btn-gradient">Manage Instructions</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="create-instruction-wrapper">
+        <div class="page-title">
+            <h1>{{ form_title }}</h1> {# This will be "Create Instruction" or "Edit Instruction" based on context #}
+        </div>
+
+        {# Display messages if any, outside the form, perhaps as a toast or non-intrusive notification #}
+        {# For now, keeping this block commented out as per design image, but consider a JS notification system #}
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <form method="post" action="{% if instruction_set %}{% url 'edit_instruction' instruction_set.pk %}{% else %}{% url 'instruction_form' %}{% endif %}" class="instruction-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_name">Title</label>
+                <input type="text" name="name" id="id_name" placeholder="Enter title" required value="{{ instruction_set.name|default:'' }}"> {# Use instruction_set.name for edit, empty for create #}
+                {# Add form errors if using Django Forms: #}
+                {% if form.name.errors %}
+                    <div class="error-message">{{ form.name.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="id_instructions">Instructions</label>
+                <textarea name="instructions" id="id_instructions" placeholder="Enter instructions" required>{{ instruction_set.instructions|default:'' }}</textarea> {# Use instruction_set.instructions for edit, empty for create #}
+                {# Add form errors if using Django Forms: #}
+                {% if form.instructions.errors %}
+                    <div class="error-message">{{ form.instructions.errors }}</div>
+                {% endif %}
+            </div>
+            {# The 'Set as Default Instruction Set' checkbox is removed as per the image_55104e.png design #}
+            
+            <button type="submit" class="btn-save">Save</button>
+        </form>
+    </div>
+
+{% block extra_js %}
+    {# JavaScript for hamburger menu #}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const hamburgerMenu = document.querySelector('.hamburger-menu');
+            const navLinks = document.querySelector('.nav-links');
+
+            if (hamburgerMenu && navLinks) {
+                hamburgerMenu.addEventListener('click', () => {
+                    navLinks.classList.toggle('active');
+                    hamburgerMenu.classList.toggle('active');
+                });
+            }
+        });
+    </script>
+{% endblock extra_js %}
+{% endblock %}

@@ -1,0 +1,49 @@
+# .github/workflows/deploy.yml
+
+name: Deploy to Production Server
+
+# This action runs on every push to the 'main' branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    # The type of virtual machine the job will run on
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the repository's code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: SSH into the server and run the deployment script
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Navigate to the project directory on the server
+            cd /var/www/ai-data-cleaner
+
+            # Pull the latest code from GitHub
+            git pull origin main
+
+            # Activate the virtual environment
+            source env/bin/activate
+
+            # Install any new dependencies that were added
+            pip install -r requirements.txt
+
+            # Run database migrations for any model changes
+            python manage.py migrate
+
+            # Collect any new static files
+            python manage.py collectstatic --no-input
+
+            # Restart the Gunicorn service to apply all changes
+            # 'sudo' is needed because systemctl requires root privileges
+            sudo systemctl restart gunicorn.service

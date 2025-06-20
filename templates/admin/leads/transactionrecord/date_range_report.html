@@ -1,0 +1,164 @@
+{# leads/templates/admin/leads/transactionrecord/date_range_report.html #}
+{% extends 'admin/base_site.html' %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <style>
+        .report-container {
+            padding: 20px;
+            background-color: #333; /* Dark background */
+            color: #eee; /* Light text */
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .report-container h2, .report-container h3 {
+            color: #fff;
+            margin-bottom: 15px;
+        }
+        .report-container p {
+            margin-bottom: 8px;
+        }
+        .report-form {
+            background-color: #444;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .report-form label {
+            margin-right: 5px;
+            color: #ccc;
+        }
+        .report-form input[type="date"] {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #555;
+            background-color: #555;
+            color: #eee;
+        }
+        .report-form button, .report-form a.button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+        }
+        .report-form a.button.secondary {
+            background-color: #6c757d;
+        }
+        .report-form button:hover, .report-form a.button:hover {
+            opacity: 0.9;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #555;
+            padding: 8px;
+            text-align: left;
+        }
+        .data-table th {
+            background-color: #222;
+            color: #fff;
+        }
+        .data-table tr:nth-child(even) {
+            background-color: #3a3a3a;
+        }
+        .data-table tr:hover {
+            background-color: #4a4a4a;
+        }
+        .empty-message {
+            text-align: center;
+            padding: 20px;
+            color: #ccc;
+        }
+        .total-summary {
+            background-color: #444;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .total-summary p strong {
+            color: #fff;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <div class="report-container">
+        <h2>{{ title }}</h2>
+
+        {% if report_user %}
+            <h3>Report for User: {{ report_user.username }}</h3>
+        {% else %}
+            <h3>Report for All Users</h3>
+        {% endif %}
+
+        <div class="report-form">
+            <form method="GET" action="">
+                <label for="id_start_date">Start Date:</label>
+                <input type="date" name="start_date" id="id_start_date" value="{{ start_date_str }}">
+
+                <label for="id_end_date">End Date:</label>
+                <input type="date" name="end_date" id="id_end_date" value="{{ end_date_str }}">
+                
+                {% if report_user %}
+                    <input type="hidden" name="user" value="{{ report_user.id }}">
+                {% endif %}
+                
+                <button type="submit">Filter Report</button>
+                <a href="{% url 'admin:transactionrecord_date_range_report' %}{% if report_user %}?user={{ report_user.id }}{% endif %}" class="button secondary">Clear Filter</a>
+                <button type="submit" name="download_excel" value="true">Download Excel</button>
+            </form>
+        </div>
+
+        <div class="total-summary">
+            <h3>Summary for Selected Range:</h3>
+            <p><strong>Total Input Tokens:</strong> {{ report_totals.total_input_tokens }}</p>
+            <p><strong>Total Output Tokens:</strong> {{ report_totals.total_output_tokens }}</p>
+            <p><strong>Total Cost (USD):</strong> ${{ report_totals.total_cost_usd|floatformat:6 }}</p>
+        </div>
+
+        <h3>Detailed Transactions:</h3>
+        {% if transactions %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Timestamp</th>
+                        <th>Transaction Type</th>
+                        <th>Input Tokens</th>
+                        <th>Output Tokens</th>
+                        <th>Cost (USD)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.user.username }}</td>
+                        <td>{{ transaction.timestamp|date:"Y-m-d H:i:s" }}</td>
+                        <td>{{ transaction.get_transaction_type_display }}</td>
+                        <td>{{ transaction.input_tokens }}</td>
+                        <td>{{ transaction.output_tokens }}</td>
+                        <td>${{ transaction.cost_usd|floatformat:6 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="empty-message">No transactions found for the selected criteria.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

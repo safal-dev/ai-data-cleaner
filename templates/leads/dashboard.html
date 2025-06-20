@@ -1,0 +1,75 @@
+{% extends 'leads/base.html' %}
+{% load static %}
+
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/landing_page.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+ <header class="main-header">
+        <div class="container">
+            <a href="{% url 'index' %}" class="logo">
+                <i class="fas fa"></i> {# Font Awesome diamond icon #}
+                Lead Cleaner
+            </a>
+
+            <nav class="main-nav">
+                <button class="hamburger-menu" aria-label="Toggle navigation">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+                <ul class="nav-links">
+                    <li><a href="{% url 'manage_instructions' %}" class="btn-gradient">Manage Instruction</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+<div class="dashboard-wrapper">
+    {# Assuming Navbar is either in base.html or included here. #}
+    {# If your base.html does not include a navbar, you would add one here. #}
+    {# Example: {% include 'leads/navbar.html' %} #}
+
+    <main class="dashboard-main-content">
+
+        <div class="processing-options-container-minimal">
+            {# Processing Digital Data Card (Link to a new page) #}
+            <div class="processing-option-card">
+                {# Corrected URL name to match your urls.py #}
+                <a href="{% url 'process_digital_data' %}" class="option-link">
+                    <img src="{% static 'images/digital-data.png' %}" alt="Digital Data Icon" class="option-icon">
+                    <h3>Process Digital Data</h3>
+                    <p>Excel, CSV, and Copy/Paste Text</p>
+                </a>
+            </div>
+
+            {# Process Physical Data Card (Link to a new page) #}
+            <div class="processing-option-card">
+                {# Corrected URL name to match your urls.py #}
+                <a href="{% url 'process_physical_data' %}" class="option-link">
+                    <img src="{% static 'images/paper-data.webp' %}" alt="Physical Data Icon" class="option-icon">
+                    <h3>Process Physical Data</h3>
+                    <p>Image Files</p>
+                </a>
+            </div>
+            
+
+        <div class="instruction-box">
+            <h2 class="instruction-box-heading">How to Use:</h2>
+            <ol class="instruction-list">
+                <li><span class="highlight">Configure Instructions:</span> Define AI instructions via the "Instruction Configuration" button.</li>
+                <li><span class="highlight">Choose Data Type:</span> Select "Process Digital Data" (Excel, CSV, Text) or "Process Physical Data" (Images).</li>
+                <li><span class="highlight">Upload & Process:</span> Upload your files/paste text on the next page, then click "Process".</li>
+                <li><span class="highlight">Download Results:</span> Cleaned data will be downloaded automatically.</li>
+            </ol>
+        </div>
+
+        </div>
+    </main>
+
+
+</div>
+{% endblock %}

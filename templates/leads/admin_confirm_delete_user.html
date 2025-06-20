@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirm Delete User{% endblock %}
+
+{% block content %}
+    <div class="header">
+        <h1>Confirm Delete User</h1>
+        <a href="{% url 'admin_user_management' %}" class="button-secondary">Cancel</a>
+    </div>
+
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <div class="confirmation-box">
+        <p>Are you sure you want to delete user **{{ user_to_delete.username }}**?</p>
+        <p style="color: red; font-weight: bold;">This action cannot be undone. All associated data (profile, instruction sets) will be permanently deleted.</p>
+
+        <form method="post" action="{% url 'admin_delete_user' pk=user_to_delete.pk %}" style="margin-top: 20px;">
+            {% csrf_token %}
+            <button type="submit" class="button-primary" style="background-color: #dc3545;">Yes, Delete User</button>
+            <a href="{% url 'admin_user_management' %}" class="button-secondary">No, Go Back</a>
+        </form>
+    </div>
+
+    <style>
+        .confirmation-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .confirmation-box p {
+            margin-bottom: 10px;
+        }
+    </style>
+{% endblock %}

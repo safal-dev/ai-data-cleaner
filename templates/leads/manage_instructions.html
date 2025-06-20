@@ -1,0 +1,132 @@
+{% extends 'leads/base.html' %}
+{% load static %}
+
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/landing_page.css' %}">
+    <link rel="stylesheet" href="{% static 'css/manage_instructions.css' %}">
+{% endblock %}
+
+{% block content %}
+ <header class="main-header">
+        <div class="container">
+            <a href="{% url 'index' %}" class="logo">
+                <i class="fas fa"></i> {# Font Awesome diamond icon #}
+                Lead Cleaner
+            </a>
+
+            <nav class="main-nav">
+                <button class="hamburger-menu" aria-label="Toggle navigation">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+                <ul class="nav-links">
+                    <li><a href="{% url 'dashboard'%}">Dashboard</a></li>
+                    <li><a href="{% url 'instruction_form' %}" class="btn-gradient">Create Instruction</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <div class="manage-instructions-wrapper">
+
+        {% if instruction_sets %}
+            <div class="table-container">
+                <table class="instruction-table">
+                    <thead>
+                        <tr>
+                            <th>Instruction Name</th>
+                            <th class="text-center">Default</th>
+                            <th class="text-center">Actions</th> {# Added an explicit Actions column #}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for instruction_set in instruction_sets %}
+                            {# Make the entire row clickable for editing #}
+                            <tr class="instruction-row {% if instruction_set.is_default %}is-default{% endif %}"
+                                onclick="window.location.href = '{% url 'edit_instruction' instruction_set.pk %}';">
+                                <td>
+                                    <div class="instruction-name">{{ instruction_set.name }}</div>
+
+                                </td>
+
+                                <td class="text-center">
+                                    {% if not instruction_set.is_default %}
+                                        <form action="{% url 'set_default_instruction' instruction_set.pk %}" method="post" class="inline-form">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn-action btn-set-default" title="Set as Default">
+                                                <i class="fas fa-star"></i> {# Using Font Awesome icon for set default #}
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                                <td class="actions-cell">
+                                    {# Edit action is now handled by clicking the row #}
+                                    {# Delete and Set Default actions are placed here, outside the row click #}
+                                    {% if not instruction_set.is_default or instruction_sets.count > 1 %}
+                                        <form action="{% url 'delete_instruction' instruction_set.pk %}" method="post" class="inline-form" onsubmit="return confirm('Are you sure you want to delete \'{{ instruction_set.name }}\'?');">
+                                            {% csrf_token %}
+                                        <button type="submit" class="btn-action btn-delete" title="Delete Instruction" onclick="event.stopPropagation();">
+                                        <i class="fas fa-trash"></i>
+                                        </button>
+                                        </form>
+                                    {% endif %}
+                                    {# Set Default button only if it's not already default and there's a need to change #}
+
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div> {# /.table-container #}
+        {% else %}
+            <p class="no-instructions-message">No instruction sets saved yet. Click "New Instruction" to add one.</p>
+        {% endif %}
+    </div> {# /.manage-instructions-wrapper #}
+
+    <script>
+        // JavaScript for handling the default checkbox without full page reload
+        // This requires your Django view for 'set_default_instruction' to handle AJAX requests.
+        function handleSetDefault(checkbox) {
+            const instructionId = checkbox.dataset.instructionId;
+            const isChecked = checkbox.checked;
+
+            if (isChecked) { // Only proceed if trying to set as default
+                if (confirm(`Are you sure you want to set this instruction as default?`)) {
+                    // Send an AJAX request to set this instruction as default
+                    fetch(`{% url 'set_default_instruction' 0 %}`.replace('0', instructionId), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': document.querySelector('input[name="csrfmiddlewaretoken"]').value
+                        },
+                        body: 'is_default=true' // Or whatever your view expects
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // On success, update all checkboxes
+                            document.querySelectorAll('.default-checkbox').forEach(cb => {
+                                cb.checked = (cb.dataset.instructionId === instructionId);
+                                cb.disabled = cb.checked; // Disable the newly default one
+                            });
+                            // Also update the 'Set Default' button visibility (requires more complex JS or page reload)
+                            // For simplicity, a page reload might be better here to update all states correctly.
+                            location.reload();
+                        } else {
+                            alert('Failed to set default: ' + data.error);
+                            checkbox.checked = false; // Revert checkbox if something went wrong
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while setting default.');
+                        checkbox.checked = false; // Revert checkbox on error
+                    });
+                } else {
+                    checkbox.checked = false; // User cancelled, revert checkbox
+                }
+            }
+        }
+    </script>
+{% endblock %}
