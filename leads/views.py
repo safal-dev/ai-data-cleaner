@@ -822,6 +822,15 @@ def process_physical_data_view(request):
         'default_instruction': default_instruction
     }
 
+        # 2. THE CRITICAL CHECK: Does the user have ANY instructions at all?
+    if not instruction_sets.exists():
+        # If the user has zero instructions, send a helpful message and redirect them.
+        messages.info(request, "Welcome! Please create your first AI instruction set to get started.")
+        return redirect('manage_instructions') # Redirect to the page where they can create one.
+
+    # 3. If they have instructions, find the default one for the form.
+    default_instruction = instruction_sets.filter(is_default=True).first()
+
     if request.method != 'POST':
         # If it's a GET request, just show the upload page
         return render(request, 'leads/process_physical_data.html', context)
