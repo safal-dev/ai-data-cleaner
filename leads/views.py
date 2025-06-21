@@ -590,6 +590,14 @@ def process_digital_data_view(request):
     instruction_sets = InstructionSet.objects.filter(user=request.user).order_by('name')
     default_instruction = instruction_sets.filter(is_default=True).first()
 
+        # 2. THE CRITICAL CHECK: Does the user have ANY instructions at all?
+    if not instruction_sets.exists():
+        # If the user has zero instructions, send a helpful message and redirect them.
+        messages.info(request, "Welcome! Please create your first AI instruction set to get started.")
+        return redirect('manage_instructions') # Redirect to the page where they can create one.
+
+    # 3. If they have instructions, find the default one for the form.
+    default_instruction = instruction_sets.filter(is_default=True).first()
     if request.method == 'POST':
         profile = request.user.profile
         profile.check_and_reset_quota() # Ensure user's quota is up-to-date
