@@ -587,158 +587,158 @@ def process_digital_data_view(request):
 
 
 @login_required
-def process_physical_data_view(request):
-    """
-    Handles the page for processing physical documents (like images).
-    Processes data using the Gemini Vision API, tracks token usage, and calculates cost.
-    Creates a TransactionRecord for each successful processing event.
-    """
-    instruction_sets = InstructionSet.objects.filter(user=request.user).order_by('name')
-    default_instruction = instruction_sets.filter(is_default=True).first()
+# def process_physical_data_view(request):
+#     """
+#     Handles the page for processing physical documents (like images).
+#     Processes data using the Gemini Vision API, tracks token usage, and calculates cost.
+#     Creates a TransactionRecord for each successful processing event.
+#     """
+#     instruction_sets = InstructionSet.objects.filter(user=request.user).order_by('name')
+#     default_instruction = instruction_sets.filter(is_default=True).first()
 
-    if request.method == 'POST':
-        profile = request.user.profile
-        profile.check_and_reset_quota()
+#     if request.method == 'POST':
+#         profile = request.user.profile
+#         profile.check_and_reset_quota()
 
-        if profile.cleans_this_month >= profile.monthly_quota:
-            messages.error(request, f"You have reached your monthly data cleaning limit ({profile.monthly_quota}). Please contact an administrator for an increase.")
-            return redirect('dashboard')
+#         if profile.cleans_this_month >= profile.monthly_quota:
+#             messages.error(request, f"You have reached your monthly data cleaning limit ({profile.monthly_quota}). Please contact an administrator for an increase.")
+#             return redirect('dashboard')
 
-        uploaded_images = request.FILES.getlist('physical_images')
+#         uploaded_images = request.FILES.getlist('physical_images')
         
-        selected_instruction_id = request.POST.get('selected_instruction_id')
-        selected_instruction = None
-        if selected_instruction_id:
-            try:
-                selected_instruction = get_object_or_404(InstructionSet, pk=selected_instruction_id, user=request.user)
-            except Exception:
-                messages.warning(request, "Selected instruction not found or does not belong to you. Attempting to use default.")
+#         selected_instruction_id = request.POST.get('selected_instruction_id')
+#         selected_instruction = None
+#         if selected_instruction_id:
+#             try:
+#                 selected_instruction = get_object_or_404(InstructionSet, pk=selected_instruction_id, user=request.user)
+#             except Exception:
+#                 messages.warning(request, "Selected instruction not found or does not belong to you. Attempting to use default.")
         
-        if not selected_instruction:
-            selected_instruction = InstructionSet.objects.filter(user=request.user, is_default=True).first()
+#         if not selected_instruction:
+#             selected_instruction = InstructionSet.objects.filter(user=request.user, is_default=True).first()
 
-        if not selected_instruction:
-            messages.error(request, "No AI instructions found. Please create one or set a default in 'Manage AI Instructions'.")
-            return redirect('manage_instructions')
+#         if not selected_instruction:
+#             messages.error(request, "No AI instructions found. Please create one or set a default in 'Manage AI Instructions'.")
+#             return redirect('manage_instructions')
 
-        user_instructions = selected_instruction.instructions.strip()
+#         user_instructions = selected_instruction.instructions.strip()
 
-        if not uploaded_images:
-            messages.error(request, "Please upload at least one image file.")
-            context = {
-                'instruction_sets': instruction_sets,
-                'default_instruction': selected_instruction
-            }
-            return render(request, 'leads/process_physical_data.html', context)
+#         if not uploaded_images:
+#             messages.error(request, "Please upload at least one image file.")
+#             context = {
+#                 'instruction_sets': instruction_sets,
+#                 'default_instruction': selected_instruction
+#             }
+#             return render(request, 'leads/process_physical_data.html', context)
 
-        image_parts = []
-        supported_image_types = ['image/jpeg', 'image/png', 'image/webp'] 
+#         image_parts = []
+#         supported_image_types = ['image/jpeg', 'image/png', 'image/webp'] 
         
-        for uploaded_image in uploaded_images:
-            mime_type, _ = mimetypes.guess_type(uploaded_image.name)
-            if not mime_type or mime_type not in supported_image_types:
-                messages.warning(request, f"Skipping unsupported image type: {uploaded_image.name} ({mime_type}). Only JPG, PNG, WebP are primarily supported.")
-                continue
+#         for uploaded_image in uploaded_images:
+#             mime_type, _ = mimetypes.guess_type(uploaded_image.name)
+#             if not mime_type or mime_type not in supported_image_types:
+#                 messages.warning(request, f"Skipping unsupported image type: {uploaded_image.name} ({mime_type}). Only JPG, PNG, WebP are primarily supported.")
+#                 continue
             
-            try:
-                image_data = uploaded_image.read()
-                image_parts.append({
-                    "mime_type": mime_type,
-                    "data": image_data
-                })
-            except Exception as e:
-                messages.error(request, f"Failed to read image '{uploaded_image.name}': {e}")
-                continue
+#             try:
+#                 image_data = uploaded_image.read()
+#                 image_parts.append({
+#                     "mime_type": mime_type,
+#                     "data": image_data
+#                 })
+#             except Exception as e:
+#                 messages.error(request, f"Failed to read image '{uploaded_image.name}': {e}")
+#                 continue
 
-        if not image_parts:
-            messages.error(request, "No valid image files were provided for processing.")
-            context = {
-                'instruction_sets': instruction_sets,
-                'default_instruction': selected_instruction
-            }
-            return render(request, 'leads/process_physical_data.html', context)
+#         if not image_parts:
+#             messages.error(request, "No valid image files were provided for processing.")
+#             context = {
+#                 'instruction_sets': instruction_sets,
+#                 'default_instruction': selected_instruction
+#             }
+#             return render(request, 'leads/process_physical_data.html', context)
 
-        try:
-            extracted_data_raw_output_tuple = call_gemini_vision_api(image_parts, user_instructions)
+#         try:
+#             extracted_data_raw_output_tuple = call_gemini_vision_api(image_parts, user_instructions)
 
-            extracted_data_raw_output = extracted_data_raw_output_tuple[0]
-            input_tokens = extracted_data_raw_output_tuple[1]
-            output_tokens = extracted_data_raw_output_tuple[2]
+#             extracted_data_raw_output = extracted_data_raw_output_tuple[0]
+#             input_tokens = extracted_data_raw_output_tuple[1]
+#             output_tokens = extracted_data_raw_output_tuple[2]
             
-            model_used = 'gemini-2.0-flash' # The vision model used for image processing
+#             model_used = 'gemini-2.0-flash' # The vision model used for image processing
 
-            if not extracted_data_raw_output.strip():
-                messages.warning(request, "AI returned an empty response for image processing. Please check your instructions and image content.")
-                context = {
-                    'instruction_sets': instruction_sets,
-                    'default_instruction': selected_instruction
-                }
-                return render(request, 'leads/process_physical_data.html', context)
+#             if not extracted_data_raw_output.strip():
+#                 messages.warning(request, "AI returned an empty response for image processing. Please check your instructions and image content.")
+#                 context = {
+#                     'instruction_sets': instruction_sets,
+#                     'default_instruction': selected_instruction
+#                 }
+#                 return render(request, 'leads/process_physical_data.html', context)
 
-            # --- Calculate cost and update user's profile totals ---
-            cost = calculate_gemini_cost(model_used, input_tokens, output_tokens)
+#             # --- Calculate cost and update user's profile totals ---
+#             cost = calculate_gemini_cost(model_used, input_tokens, output_tokens)
             
-            # Ensure 'cost' is Decimal for addition to profile.total_cost_usd (safeguard)
-            if not isinstance(cost, Decimal):
-                cost = Decimal(str(cost)) 
+#             # Ensure 'cost' is Decimal for addition to profile.total_cost_usd (safeguard)
+#             if not isinstance(cost, Decimal):
+#                 cost = Decimal(str(cost)) 
 
-            profile.total_input_tokens += input_tokens
-            profile.total_output_tokens += output_tokens
-            profile.total_cost_usd += cost
-            profile.cleans_this_month += 1
-            profile.save()
+#             profile.total_input_tokens += input_tokens
+#             profile.total_output_tokens += output_tokens
+#             profile.total_cost_usd += cost
+#             profile.cleans_this_month += 1
+#             profile.save()
 
-            # --- Create a TransactionRecord for this usage event ---
-            TransactionRecord.objects.create(
-                user=request.user,
-                input_tokens=input_tokens,
-                output_tokens=output_tokens,
-                cost_usd=cost,
-                transaction_type='physical',
-                # model_used=model_used, # Uncomment if you add 'model_used' field to TransactionRecord
-            )
+#             # --- Create a TransactionRecord for this usage event ---
+#             TransactionRecord.objects.create(
+#                 user=request.user,
+#                 input_tokens=input_tokens,
+#                 output_tokens=output_tokens,
+#                 cost_usd=cost,
+#                 transaction_type='physical',
+#                 # model_used=model_used, # Uncomment if you add 'model_used' field to TransactionRecord
+#             )
 
-            df = pd.read_csv(io.StringIO(extracted_data_raw_output), sep=',')
+#             df = pd.read_csv(io.StringIO(extracted_data_raw_output), sep=',')
 
-            excel_buffer = io.BytesIO()
-            with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
-                df.to_excel(writer, index=False, sheet_name='ExtractedData')
-            excel_buffer.seek(0)
+#             excel_buffer = io.BytesIO()
+#             with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
+#                 df.to_excel(writer, index=False, sheet_name='ExtractedData')
+#             excel_buffer.seek(0)
 
-            response = HttpResponse(excel_buffer.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            default_name = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_ExtractedImageData.xlsx"
-            response['Content-Disposition'] = f'attachment; filename="{default_name}"'
+#             response = HttpResponse(excel_buffer.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+#             default_name = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_ExtractedImageData.xlsx"
+#             response['Content-Disposition'] = f'attachment; filename="{default_name}"'
 
-            return response
+#             return response
 
-        except RuntimeError as e:
-            messages.error(request, f"AI Processing Error: {e}")
-            context = {
-                'instruction_sets': instruction_sets,
-                'default_instruction': selected_instruction
-            }
-            return render(request, 'leads/process_physical_data.html', context)
-        except pd.errors.ParserError as e:
-            messages.error(request, f"AI returned data in an unreadable CSV format. Please refine your instructions. (Error: {e}) Raw AI output might be: {extracted_data_raw_output[:200]}...")
-            context = {
-                'instruction_sets': instruction_sets,
-                'default_instruction': selected_instruction
-            }
-            return render(request, 'leads/process_physical_data.html', context)
-        except Exception as e:
-            messages.error(request, f"An unexpected error occurred during image processing: {e}")
-            context = {
-                'instruction_sets': instruction_sets,
-                'default_instruction': selected_instruction
-            }
-            return render(request, 'leads/process_physical_data.html', context)
+#         except RuntimeError as e:
+#             messages.error(request, f"AI Processing Error: {e}")
+#             context = {
+#                 'instruction_sets': instruction_sets,
+#                 'default_instruction': selected_instruction
+#             }
+#             return render(request, 'leads/process_physical_data.html', context)
+#         except pd.errors.ParserError as e:
+#             messages.error(request, f"AI returned data in an unreadable CSV format. Please refine your instructions. (Error: {e}) Raw AI output might be: {extracted_data_raw_output[:200]}...")
+#             context = {
+#                 'instruction_sets': instruction_sets,
+#                 'default_instruction': selected_instruction
+#             }
+#             return render(request, 'leads/process_physical_data.html', context)
+#         except Exception as e:
+#             messages.error(request, f"An unexpected error occurred during image processing: {e}")
+#             context = {
+#                 'instruction_sets': instruction_sets,
+#                 'default_instruction': selected_instruction
+#             }
+#             return render(request, 'leads/process_physical_data.html', context)
     
-    else:
-        context = {
-            'instruction_sets': instruction_sets,
-            'default_instruction': default_instruction
-        }
-        return render(request, 'leads/process_physical_data.html', context)
+#     else:
+#         context = {
+#             'instruction_sets': instruction_sets,
+#             'default_instruction': default_instruction
+#         }
+#         return render(request, 'leads/process_physical_data.html', context)
 
 
 # This is the new dashboard view for processing forms and quota
@@ -1029,139 +1029,127 @@ def process_digital_data_view(request):
 
 
 @login_required
-def process_physical_data_view(request): # Renamed from process_image
-    # Fetch all instructions for the current user to populate the modal
+def process_physical_data_view(request):
+    """
+    Handles the page for processing physical documents (like images).
+    Processes data using the Gemini Vision API, tracks token usage, and calculates cost.
+    Creates a TransactionRecord for each successful processing event.
+    """
+    # This initial setup is the same
     instruction_sets = InstructionSet.objects.filter(user=request.user).order_by('name')
-    
-    # Get the default instruction to pre-select it and display its name
     default_instruction = instruction_sets.filter(is_default=True).first()
+    context = {
+        'instruction_sets': instruction_sets,
+        'default_instruction': default_instruction
+    }
 
-    if request.method == 'POST':
-        profile = request.user.profile
-        profile.check_and_reset_quota()
-
-        if profile.cleans_this_month >= profile.monthly_quota:
-            messages.error(request, f"You have reached your monthly data cleaning limit ({profile.monthly_quota}). Please contact an administrator for an increase.")
-            return redirect('dashboard') # Redirect to dashboard, or process_physical_data with error
-
-        # IMPORTANT: Matches 'name="physical_images"' from process_physical_data.html
-        uploaded_images = request.FILES.getlist('physical_images')
-        
-        # --- Instruction Selection Logic (Standardized for POST) ---
-        selected_instruction_id = request.POST.get('selected_instruction_id') # Changed from 'instruction_set' to 'selected_instruction_id'
-        selected_instruction = None # Initialize
-        if selected_instruction_id:
-            try:
-                selected_instruction = get_object_or_404(InstructionSet, pk=selected_instruction_id, user=request.user)
-            except Exception: # Catch any error in fetching, fallback to default
-                messages.warning(request, "Selected instruction not found or does not belong to you. Attempting to use default.")
-        
-        # If no explicit valid selection, try to get default
-        if not selected_instruction:
-            selected_instruction = InstructionSet.objects.filter(user=request.user, is_default=True).first()
-
-        # If still no instruction, user must set one
-        if not selected_instruction:
-            messages.error(request, "No AI instructions found. Please create one or set a default in 'Manage AI Instructions'.")
-            return redirect('manage_instructions') # Redirect to manage instructions page
-
-        user_instructions = selected_instruction.instructions.strip()
-
-
-        if not uploaded_images:
-            messages.error(request, "Please upload at least one image file.")
-            # Pass all instructions and the currently used/selected instruction back to the template
-            context = {
-                'instruction_sets': instruction_sets,
-                'default_instruction': selected_instruction
-            }
-            return render(request, 'leads/process_physical_data.html', context)
-
-        image_parts = []
-        supported_image_types = ['image/jpeg', 'image/png', 'image/webp'] # As per your original code
-        
-        for uploaded_image in uploaded_images:
-            mime_type, _ = mimetypes.guess_type(uploaded_image.name)
-            if not mime_type or mime_type not in supported_image_types:
-                messages.warning(request, f"Skipping unsupported image type: {uploaded_image.name} ({mime_type}). Only JPG, PNG, WebP are primarily supported.")
-                continue
-            
-            try:
-                image_data = uploaded_image.read()
-                image_parts.append({
-                    "mime_type": mime_type,
-                    "data": image_data
-                })
-            except Exception as e:
-                messages.error(request, f"Failed to read image '{uploaded_image.name}': {e}")
-                continue
-
-        if not image_parts:
-            messages.error(request, "No valid image files were provided for processing.")
-            context = {
-                'instruction_sets': instruction_sets,
-                'default_instruction': selected_instruction
-            }
-            return render(request, 'leads/process_physical_data.html', context)
-
-        try:
-            extracted_data_raw_output = call_gemini_vision_api(image_parts, user_instructions)
-
-            if not extracted_data_raw_output.strip():
-                messages.warning(request, "AI returned an empty response for image processing. Please check your instructions and image content.")
-                context = {
-                    'instruction_sets': instruction_sets,
-                    'default_instruction': selected_instruction
-                }
-                return render(request, 'leads/process_physical_data.html', context)
-
-            # Read CSV into DataFrame, specifying comma as delimiter
-            df = pd.read_csv(io.StringIO(extracted_data_raw_output), sep=',')
-
-            excel_buffer = io.BytesIO()
-            with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
-                df.to_excel(writer, index=False, sheet_name='ExtractedData')
-            excel_buffer.seek(0)
-
-            response = HttpResponse(excel_buffer.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            default_name = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_ExtractedImageData.xlsx"
-            response['Content-Disposition'] = f'attachment; filename="{default_name}"'
-
-            request.user.profile.cleans_this_month += 1
-            request.user.profile.save()
-
-            return response
-
-        except RuntimeError as e:
-            messages.error(request, f"AI Processing Error: {e}")
-            context = {
-                'instruction_sets': instruction_sets,
-                'default_instruction': selected_instruction
-            }
-            return render(request, 'leads/process_physical_data.html', context)
-        except pd.errors.ParserError as e:
-            messages.error(request, f"AI returned data in an unreadable CSV format. Please refine your instructions. (Error: {e}) Raw AI output might be: {extracted_data_raw_output[:200]}...") # Show beginning of problematic output
-            context = {
-                'instruction_sets': instruction_sets,
-                'default_instruction': selected_instruction
-            }
-            return render(request, 'leads/process_physical_data.html', context)
-        except Exception as e:
-            messages.error(request, f"An unexpected error occurred during image processing: {e}")
-            context = {
-                'instruction_sets': instruction_sets,
-                'default_instruction': selected_instruction
-            }
-            return render(request, 'leads/process_physical_data.html', context)
-    
-    # --- This block handles the GET request for the page ---
-    else:
-        context = {
-            'instruction_sets': instruction_sets,
-            'default_instruction': default_instruction
-        }
+    if request.method != 'POST':
+        # If it's a GET request, just show the upload page
         return render(request, 'leads/process_physical_data.html', context)
 
+    # --- Start of POST request logic ---
+    
+    # 1. Check User Quota
+    profile = request.user.profile
+    profile.check_and_reset_quota()
+    if profile.cleans_this_month >= profile.monthly_quota:
+        messages.error(request, f"You have reached your monthly data cleaning limit ({profile.monthly_quota}). Please contact an administrator for an increase.")
+        return redirect('dashboard')
+
+    # 2. Get Instructions
+    selected_instruction_id = request.POST.get('selected_instruction_id')
+    selected_instruction = None
+    if selected_instruction_id:
+        selected_instruction = instruction_sets.filter(pk=selected_instruction_id).first()
+    
+    if not selected_instruction:
+        selected_instruction = default_instruction
+
+    if not selected_instruction:
+        messages.error(request, "No AI instructions found. Please create one or set a default in 'Manage AI Instructions'.")
+        return redirect('manage_instructions')
+
+    user_instructions = selected_instruction.instructions
+
+    # 3. Process Uploaded Images
+    uploaded_images = request.FILES.getlist('physical_images')
+    if not uploaded_images:
+        messages.error(request, "Please upload at least one image file.")
+        return render(request, 'leads/process_physical_data.html', context)
+
+    image_parts = []
+    supported_image_types = ['image/jpeg', 'image/png', 'image/webp']
+    for uploaded_image in uploaded_images:
+        mime_type, _ = mimetypes.guess_type(uploaded_image.name)
+        if mime_type not in supported_image_types:
+            messages.warning(request, f"Skipping unsupported image type: {uploaded_image.name}.")
+            continue
+        image_parts.append({"mime_type": mime_type, "data": uploaded_image.read()})
+
+    if not image_parts:
+        messages.error(request, "No valid image files were provided for processing.")
+        return render(request, 'leads/process_physical_data.html', context)
+
+    # 4. Call AI and Handle Success/Failure
+    try:
+        # This function should be designed to return a tuple like:
+        # (text_output, input_tokens, output_tokens) on success
+        # (None, 0, 0) on failure, with the error logged internally
+        extracted_data_raw_output, input_tokens, output_tokens = call_gemini_vision_api(image_parts, user_instructions)
+
+        # --- THIS IS THE CRITICAL CHECK ---
+        # If the function failed, the text output will be None (or you can check tokens)
+        if extracted_data_raw_output is None:
+            messages.error(request, "The AI processing failed. This could be due to a network issue, an invalid API key, or an issue with the content sent. Please try again.")
+            return render(request, 'leads/process_physical_data.html', context)
+
+        # If the AI returned an empty string, it's a warning, not a crash
+        if not extracted_data_raw_output.strip():
+            messages.warning(request, "AI returned an empty response. Please check your instructions and image content.")
+            return render(request, 'leads/process_physical_data.html', context)
+        
+        # --- IF WE REACH HERE, THE AI CALL WAS SUCCESSFUL ---
+        
+        # 5. Calculate Cost and Update Profile
+        model_used = 'gemini-1.5-flash' # The model used for vision
+        cost = calculate_gemini_cost(model_used, input_tokens, output_tokens)
+        cost = Decimal(str(cost)) # Ensure it's a Decimal
+
+        profile.total_input_tokens += input_tokens
+        profile.total_output_tokens += output_tokens
+        profile.total_cost_usd += cost
+        profile.cleans_this_month += 1
+        profile.save()
+
+        # 6. Create Transaction Record
+        TransactionRecord.objects.create(
+            user=request.user,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            cost_usd=cost,
+            transaction_type='physical',
+        )
+
+        # 7. Create and Return Excel File
+        df = pd.read_csv(io.StringIO(extracted_data_raw_output), sep=',')
+        excel_buffer = io.BytesIO()
+        with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='ExtractedData')
+        excel_buffer.seek(0)
+
+        response = HttpResponse(excel_buffer.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        default_name = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_ExtractedImageData.xlsx"
+        response['Content-Disposition'] = f'attachment; filename="{default_name}"'
+        return response
+
+    except pd.errors.ParserError as e:
+        # Handle the case where the AI returns text that isn't valid CSV
+        messages.error(request, f"AI returned data in an unreadable format. Please refine your instructions to be more specific about CSV output. Error: {str(e)}")
+        return render(request, 'leads/process_physical_data.html', context)
+    except Exception as e:
+        # This is a catch-all for any other unexpected errors
+        messages.error(request, f"An unexpected critical error occurred: {str(e)}")
+        return render(request, 'leads/process_physical_data.html', context)
 
 # --- Instruction Set Management Views ---
 @login_required
