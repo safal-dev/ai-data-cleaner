@@ -1,8 +1,8 @@
 /* General container for the create/edit instruction page */
 .create-instruction-wrapper {
     max-width: 800px; /* Adjust as needed for width */
-    margin: 0 auto;/* Centers the container and adds vertical spacing */
-    padding: var(--spacing-xl) var(--spacing-lg);
+    margin: 40px auto; /* Centers the container and adds vertical spacing */
+    padding: 30px;
     background-color: #1a1a1a; /* Darker background for the form container */
     border-radius: 10px; /* Slightly rounded corners for the container */
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */
