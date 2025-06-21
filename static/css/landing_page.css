@@ -148,7 +148,7 @@ section {
 }
 
 .main-nav .nav-links li a:hover {
-    color: var(--color-blue-primary);
+    color: var(--color-white);
 }
 
 /* Hamburger Menu Styles */
