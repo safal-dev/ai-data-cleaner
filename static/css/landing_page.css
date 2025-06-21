@@ -77,11 +77,6 @@ a {
     transition: color var(--transition-speed);
 }
 
-a:hover {
-    color: var(--color-green-dark);
-    text-decoration: underline;
-}
-
 /* Container for consistent width */
 .container {
     max-width: 1200px;
@@ -145,10 +140,6 @@ section {
     font-weight: 500;
     transition: color var(--transition-speed);
     padding: 5px 15px; /* Add padding for clickable area */
-}
-
-.main-nav .nav-links li a:hover {
-    color: var(--color-white);
 }
 
 /* Hamburger Menu Styles */
