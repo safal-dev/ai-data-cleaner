@@ -123,12 +123,6 @@ section {
     gap: 8px; /* Space between icon and text */
 }
 
-.main-header .logo .fas.fa-gem { /* Style for the diamond icon */
-    font-size: 20px; /* Adjust size if needed */
-    color: var(--color-blue-primary); /* Ensure icon is green */
-    line-height: 1; /* Helps with vertical alignment */
-}
-
 
 .main-nav {
     display: flex;
@@ -142,6 +136,7 @@ section {
     margin: 0; /* Reset margin from global ul */
     padding: 0; /* Reset padding from global ul */
     align-items: center; /* Align nav items including the button */
+    color: var(--color-text-light);
 }
 
 .main-nav .nav-links li a {
@@ -203,6 +198,7 @@ section {
     font-weight: bold; /* Bold text as in image_2bce16.png */
     transition: transform 0.3s ease, box-shadow 0.3s ease; /* Add transition for hover effect */
 }
+
 
 .btn-gradient:hover {
     /* Slightly scale up or add a subtle shadow on hover */
