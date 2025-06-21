@@ -187,7 +187,7 @@ def call_gemini_vision_api(image_parts, user_instructions):
     genai.configure(api_key=settings.GEMINI_API_KEY)
 
     # CRITICAL: Use a multimodal model for vision tasks. 'gemini-1.5-pro-latest' supports images.
-    model_name = 'models/gemini-1.5-pro-latest' 
+    model_name = 'models/gemini-2.0-flash' 
     model = genai.GenerativeModel(model_name)
 
     total_input_tokens = 0
@@ -665,7 +665,7 @@ def process_physical_data_view(request):
             input_tokens = extracted_data_raw_output_tuple[1]
             output_tokens = extracted_data_raw_output_tuple[2]
             
-            model_used = 'gemini-1.5-pro-latest' 
+            model_used = 'gemini-2.0-flash' # The vision model used for image processing
 
             if not extracted_data_raw_output.strip():
                 messages.warning(request, "AI returned an empty response for image processing. Please check your instructions and image content.")
