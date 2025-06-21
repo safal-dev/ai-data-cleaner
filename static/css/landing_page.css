@@ -210,6 +210,7 @@ section {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4); /* More pronounced shadow */
     /* You could also slightly adjust the gradient for a subtle effect on hover */
     /* background: linear-gradient(to right, #e0baff, #2a83f8); */
+    color: var(--color-white);
 }
 
 
