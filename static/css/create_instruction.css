@@ -97,9 +97,7 @@ body {
 
 /* Adjustments for the main-header specifically for this page if needed */
 /* These styles should largely come from your landing_page.css or a global CSS file */
-.main-header .container {
-    padding: 15px 30px;
-}
+
 .main-header .logo {
     color: #f0f0f0;
     font-size: 1.8em;
