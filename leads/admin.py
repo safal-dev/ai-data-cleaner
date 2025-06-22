@@ -60,7 +60,7 @@ class ProfileInline(admin.StackedInline):
     def date_range_report_link(self, obj):
         if obj and obj.user_id:
             # CRITICAL FIX: Ensure this reverse uses the full name that will be defined below
-            url = reverse('admin:leads_transactionrecord_date_range_report') + f"?user={obj.user_id}"
+            url = reverse('admin:transactionrecord_date_range_report') + f"?user={obj.user_id}"
             return format_html('<a href="{}" target="_blank" class="button">Open User Usage Report</a>', url)
         return "User not linked to profile"
 
@@ -80,34 +80,23 @@ class UserAdmin(BaseUserAdmin):
 
     @admin.display(description='Monthly Quota')
     def get_monthly_quota(self, obj):
-        # THE FIX: Check if the 'profile' attribute exists before accessing it.
-        if hasattr(obj, 'profile'):
-            return obj.profile.monthly_quota
-        return "N/A"
+        return obj.profile.monthly_quota
 
     @admin.display(description='Cleans This Month')
     def get_cleans_this_month(self, obj):
-        if hasattr(obj, 'profile'):
-            return obj.profile.cleans_this_month
-        return "N/A"
+        return obj.profile.cleans_this_month
 
     @admin.display(description='Total Input Tokens (All-Time)')
     def get_total_input_tokens(self, obj):
-        if hasattr(obj, 'profile'):
-            return obj.profile.total_input_tokens
-        return "N/A"
+        return obj.profile.total_input_tokens
 
     @admin.display(description='Total Output Tokens (All-Time)')
     def get_total_output_tokens(self, obj):
-        if hasattr(obj, 'profile'):
-            return obj.profile.total_output_tokens
-        return "N/A"
+        return obj.profile.total_output_tokens
 
     @admin.display(description='Total Cost (USD - All-Time)')
     def get_total_cost_usd(self, obj):
-        if hasattr(obj, 'profile'):
-            return f"${obj.profile.total_cost_usd:.6f}"
-        return "N/A"
+        return f"${obj.profile.total_cost_usd:.6f}"
 
 
 # Unregister Django's default UserAdmin and register our custom one
