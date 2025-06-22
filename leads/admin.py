@@ -159,53 +159,68 @@ class TransactionRecordAdmin(admin.ModelAdmin):
 
     actions = [view_date_range_report_global]
 
+
+
     def date_range_report_view(self, request):
         context = self.admin_site.each_context(request)
         
-        # Start with a base queryset of all transactions
-        queryset = TransactionRecord.objects.all()
-        
-        # --- START OF NEW LOGIC ---
-        # Check if a specific user ID was passed in the URL's GET parameters
+        # --- Stage 1: Initial Setup and User Identification ---
+
+        # Get the user ID from the URL parameter, if it exists.
         user_id_from_url = request.GET.get('user')
-        initial_form_data = {}
+        target_user = None
 
         if user_id_from_url:
             try:
-                # If a user ID is in the URL, pre-filter the main queryset right away
-                user_object = User.objects.get(pk=user_id_from_url)
-                queryset = queryset.filter(user=user_object)
-                # Also, set the initial data for the form so the dropdown is pre-selected
-                initial_form_data['user'] = user_object
+                # Find the specific user we are supposed to be viewing.
+                target_user = User.objects.get(pk=user_id_from_url)
             except User.DoesNotExist:
-                # If an invalid user ID is passed, just ignore it
-                pass
-        
-        # Initialize the form. If we have initial data, use it. Otherwise, use the form submission data.
-        form = DateRangeForm(request.GET or None, initial=initial_form_data)
-        # --- END OF NEW LOGIC ---
+                # If the user ID is invalid, we'll just show the global report.
+                messages.error(request, f"User with ID {user_id_from_url} not found.")
+                pass # target_user remains None
 
-        # The rest of the logic can now remain the same.
-        # It will start with either the full queryset or the user-filtered one.
+        # Initialize the form. If we have a target_user, pre-fill the form with them.
+        # If the admin submits a new form, request.GET will be used instead.
+        initial_data = {'user': target_user} if target_user else {}
+        form = DateRangeForm(request.GET or None, initial=initial_data)
+
+        # --- Stage 2: Filtering Logic ---
+
+        # Start with a base queryset. If we have a target user, filter by them immediately.
+        if target_user:
+            queryset = TransactionRecord.objects.filter(user=target_user)
+            context['report_title'] = f"Report for {target_user.username}"
+        else:
+            # If no specific user, start with all transactions.
+            queryset = TransactionRecord.objects.all()
+            context['report_title'] = "Report for All Users"
+
+        # Now, check if the form was submitted with date filters.
         if form.is_valid():
-            # This will now correctly handle date filters ON TOP of the initial user filter
             start_date = form.cleaned_data.get('start_date')
             end_date = form.cleaned_data.get('end_date')
             
-            # Note: we don't need to re-filter by user here if it came from the URL,
-            # but having it here makes the form work correctly if the user *changes* the selection.
-            user_filter = form.cleaned_data.get('user')
-            if user_filter:
-                # If the user changes the dropdown, we need a fresh query
-                queryset = TransactionRecord.objects.filter(user=user_filter)
-            
+            # This handles the case where the admin changes the user in the dropdown.
+            # It will override the initial user filter.
+            user_from_form = form.cleaned_data.get('user')
+            if user_from_form:
+                queryset = TransactionRecord.objects.filter(user=user_from_form)
+                context['report_title'] = f"Report for {user_from_form.username}"
+            elif not target_user: # If form user is cleared and no URL user, reset to all
+                queryset = TransactionRecord.objects.all()
+                context['report_title'] = "Report for All Users"
+
+            # Apply date filters on top of the (potentially user-filtered) queryset.
             if start_date:
                 start_datetime = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
                 queryset = queryset.filter(timestamp__gte=start_datetime)
             if end_date:
                 end_datetime = timezone.make_aware(datetime.combine(end_date + timedelta(days=1), datetime.min.time()))
                 queryset = queryset.filter(timestamp__lt=end_datetime)
+
+        # --- Stage 3: Aggregation and Final Context ---
         
+        # This aggregation always runs on the final, correctly filtered queryset.
         aggregates = queryset.aggregate(
             total_input=Sum('input_tokens', default=Decimal('0')),
             total_output=Sum('output_tokens', default=Decimal('0')),
@@ -213,7 +228,7 @@ class TransactionRecordAdmin(admin.ModelAdmin):
         )
 
         context.update({
-            'title': 'AI Usage Report by Date Range',
+            'title': 'AI Usage Report', # The main page title
             'form': form,
             'transactions': queryset.order_by('-timestamp'),
             'sum_input_tokens': aggregates['total_input'],
@@ -224,4 +239,5 @@ class TransactionRecordAdmin(admin.ModelAdmin):
         })
         
         return TemplateResponse(request, 'admin/leads/transactionrecord/date_range_report.html', context)
-        
+
+
