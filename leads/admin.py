@@ -228,12 +228,21 @@ class TransactionRecordAdmin(admin.ModelAdmin):
         )
 
         context.update({
-            'title': 'AI Usage Report', # The main page title
+            'title': 'AI Usage Report by Date Range',
             'form': form,
             'transactions': queryset.order_by('-timestamp'),
-            'sum_input_tokens': aggregates['total_input'],
-            'sum_output_tokens': aggregates['total_output'],
-            'sum_cost_usd': aggregates['total_cost'],
+            
+            # THE FIX: We are creating the 'report_totals' object that the template wants.
+            'report_totals': {
+                'total_input_tokens': aggregates['total_input'],
+                'total_output_tokens': aggregates['total_output'],
+                'total_cost_usd': aggregates['total_cost']
+            },
+            
+            # THE FIX: We are sending the 'report_user' object that the template wants.
+            'report_user': target_user, # 'target_user' is defined at the top of the view
+            
+            # These are for the admin interface to work correctly.
             'media': self.media,
             'has_permission': True
         })
