@@ -151,53 +151,59 @@ class TransactionRecordAdmin(admin.ModelAdmin):
         return custom_urls + urls
 
 
-def date_range_report_view(self, request):
-    context = self.admin_site.each_context(request)
-    
-    # 1. Initialize the form with GET data. This works for both initial load and submissions.
-    form = DateRangeForm(request.GET or None)
-    
-    # 2. Start with the base queryset.
-    queryset = TransactionRecord.objects.all()
+    def date_range_report_view(self, request):
+        context = self.admin_site.each_context(request)
+        
+        initial_form_data = {}
+        if 'user' in request.GET:
+            try:
+                initial_form_data['user'] = User.objects.get(pk=request.GET['user'])
+            except User.DoesNotExist:
+                pass
+        
+        form = DateRangeForm(request.GET or initial_form_data)
+        
+        sum_input_tokens = Decimal('0.00')
+        sum_output_tokens = Decimal('0.00')
+        sum_cost_usd = Decimal('0.00')
+        
+        transactions = TransactionRecord.objects.all()
 
-    # 3. Only try to filter IF the form is submitted AND valid.
-    if form.is_valid():
-        start_date = form.cleaned_data.get('start_date')
-        end_date = form.cleaned_data.get('end_date')
-        user_filter = form.cleaned_data.get('user')
+        if form.is_valid():
+            start_date = form.cleaned_data.get('start_date')
+            end_date = form.cleaned_data.get('end_date')
+            user_filter = form.cleaned_data.get('user')
 
-        # The filtering logic is *inside* this block, so variables are always defined.
-        if user_filter:
-            queryset = queryset.filter(user=user_filter)
-        if start_date:
-            start_datetime = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
-            queryset = queryset.filter(timestamp__gte=start_datetime)
-        if end_date:
-            end_datetime = timezone.make_aware(datetime.combine(end_date + timedelta(days=1), datetime.min.time()))
-            queryset = queryset.filter(timestamp__lt=end_datetime)
-    
-    # 4. The aggregation runs *OUTSIDE* the 'if' block.
-    #    It will run on the full queryset on initial load, and on the filtered queryset after submission.
-    aggregates = queryset.aggregate(
-        total_input=Sum('input_tokens', default=Decimal('0')),
-        total_output=Sum('output_tokens', default=Decimal('0')),
-        total_cost=Sum('cost_usd', default=Decimal('0.00'))
-    )
+            if user_filter:
+                transactions = transactions.filter(user=user_filter)
 
-    # 5. The context is updated with the CORRECT, calculated values from 'aggregates'.
-    context.update({
-        'title': 'AI Usage Report by Date Range',
-        'form': form,
-        'transactions': queryset.order_by('-timestamp'), # Pass the list of transactions
-        'sum_input_tokens': aggregates['total_input'],   # Use the calculated value
-        'sum_output_tokens': aggregates['total_output'], # Use the calculated value
-        'sum_cost_usd': aggregates['total_cost'],      # Use the calculated value
-        'media': self.media,
-        'has_permission': True
-    })
-    
-    return TemplateResponse(request, 'admin/leads/transactionrecord/date_range_report.html', context)
+            if start_date:
+                start_datetime = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
+                transactions = transactions.filter(timestamp__gte=start_datetime)
+            
+            if end_date:
+                end_datetime = timezone.make_aware(datetime.combine(end_date + timedelta(days=1), datetime.min.time()))
+                transactions = transactions.filter(timestamp__lt=end_datetime)
 
+            aggregates = transactions.aggregate(
+                total_input=Sum('input_tokens', default=Decimal('0.00')),
+                total_output=Sum('output_tokens', default=Decimal('0.00')),
+                total_cost=Sum('cost_usd', default=Decimal('0.00'))
+            )
+            sum_input_tokens = aggregates['total_input']
+            sum_output_tokens = aggregates['total_output']
+            sum_cost_usd = aggregates['total_cost']
+
+        context.update({
+            'title': 'AI Usage Report by Date Range',
+            'form': form,
+            'sum_input_tokens': sum_input_tokens,
+            'sum_output_tokens': sum_output_tokens,
+            'sum_cost_usd': sum_cost_usd,
+            'media': self.media,
+            'has_permission': True
+        })
+        return TemplateResponse(request, 'admin/leads/transactionrecord/date_range_report.html', context)
 
     def view_date_range_report_global(self, request, queryset):
         # CRITICAL FIX: Ensure this redirect uses the full name defined above
