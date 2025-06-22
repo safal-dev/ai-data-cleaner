@@ -162,49 +162,66 @@ class TransactionRecordAdmin(admin.ModelAdmin):
     def date_range_report_view(self, request):
         context = self.admin_site.each_context(request)
         
-        # Initialize the form with data from the request's GET parameters.
-        # This handles both the initial load and submissions.
-        form = DateRangeForm(request.GET or None)
-        
-        # Start with a base queryset of all transactions.
+        # Start with a base queryset of all transactions
         queryset = TransactionRecord.objects.all()
+        
+        # --- START OF NEW LOGIC ---
+        # Check if a specific user ID was passed in the URL's GET parameters
+        user_id_from_url = request.GET.get('user')
+        initial_form_data = {}
 
-        # Only try to filter IF the form has been submitted and is valid.
+        if user_id_from_url:
+            try:
+                # If a user ID is in the URL, pre-filter the main queryset right away
+                user_object = User.objects.get(pk=user_id_from_url)
+                queryset = queryset.filter(user=user_object)
+                # Also, set the initial data for the form so the dropdown is pre-selected
+                initial_form_data['user'] = user_object
+            except User.DoesNotExist:
+                # If an invalid user ID is passed, just ignore it
+                pass
+        
+        # Initialize the form. If we have initial data, use it. Otherwise, use the form submission data.
+        form = DateRangeForm(request.GET or None, initial=initial_form_data)
+        # --- END OF NEW LOGIC ---
+
+        # The rest of the logic can now remain the same.
+        # It will start with either the full queryset or the user-filtered one.
         if form.is_valid():
+            # This will now correctly handle date filters ON TOP of the initial user filter
             start_date = form.cleaned_data.get('start_date')
             end_date = form.cleaned_data.get('end_date')
+            
+            # Note: we don't need to re-filter by user here if it came from the URL,
+            # but having it here makes the form work correctly if the user *changes* the selection.
             user_filter = form.cleaned_data.get('user')
-
-            # The filtering logic is correctly placed inside this block.
             if user_filter:
-                queryset = queryset.filter(user=user_filter)
+                # If the user changes the dropdown, we need a fresh query
+                queryset = TransactionRecord.objects.filter(user=user_filter)
+            
             if start_date:
                 start_datetime = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
                 queryset = queryset.filter(timestamp__gte=start_datetime)
             if end_date:
-                # This is the robust way to include the entire end date.
                 end_datetime = timezone.make_aware(datetime.combine(end_date + timedelta(days=1), datetime.min.time()))
                 queryset = queryset.filter(timestamp__lt=end_datetime)
         
-        # THE FIX: The aggregation now runs *OUTSIDE* the 'if' block.
-        # On initial load, it runs on the full queryset (all transactions).
-        # After submission, it runs on the filtered queryset.
         aggregates = queryset.aggregate(
             total_input=Sum('input_tokens', default=Decimal('0')),
             total_output=Sum('output_tokens', default=Decimal('0')),
             total_cost=Sum('cost_usd', default=Decimal('0.00'))
         )
 
-        # Now, update the context with the correctly calculated values.
         context.update({
             'title': 'AI Usage Report by Date Range',
             'form': form,
-            'transactions': queryset.order_by('-timestamp'), # Pass the list of transactions to display
-            'sum_input_tokens': aggregates['total_input'],   # Use the value from the 'aggregates' dictionary
-            'sum_output_tokens': aggregates['total_output'], # Use the value from the 'aggregates' dictionary
-            'sum_cost_usd': aggregates['total_cost'],      # Use the value from the 'aggregates' dictionary
+            'transactions': queryset.order_by('-timestamp'),
+            'sum_input_tokens': aggregates['total_input'],
+            'sum_output_tokens': aggregates['total_output'],
+            'sum_cost_usd': aggregates['total_cost'],
             'media': self.media,
             'has_permission': True
         })
         
         return TemplateResponse(request, 'admin/leads/transactionrecord/date_range_report.html', context)
+        
