@@ -323,58 +323,7 @@
 }
 
 
-@media (max-width: 768px) {
-    /* Main navigation for mobile (hamburger menu visible) */
-    .main-nav .nav-links {
-        display: none; /* Hidden by default */
-        flex-direction: column;
-        position: absolute;
-        top: 100%; /* Position below the header */
-        left: 0;
-        width: 100%;
-        background-color: var(--color-dark-bg);
-        border-top: 1px solid var(--color-border);
-        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
-        padding: var(--spacing-sm) 0;
-        align-items: center; /* Center links in column */
-        transition: transform 0.3s ease-out, opacity 0.3s ease-out;
-        transform: translateY(-10px); /* Start slightly off screen */
-        opacity: 0;
-        pointer-events: none; /* Prevent interaction when hidden */
-    }
 
-    .main-nav .nav-links.active {
-        display: flex; /* Show when active */
-        transform: translateY(0); /* Slide into view */
-        opacity: 1;
-        pointer-events: auto; /* Allow interaction */
-    }
-
-    .main-nav .nav-links li {
-        width: 100%; /* Make list items take full width */
-        text-align: center;
-        padding: 5px 0;
-    }
-
-    .main-nav .nav-links li a {
-        padding: 10px 0; /* More padding for mobile tap targets */
-        display: block; /* Make the whole area clickable */
-        width: 100%;
-    }
-
-    .main-nav .nav-links li:last-child { /* Style for the Get Started button in mobile menu */
-        margin-top: var(--spacing-sm); /* Add space above the button */
-    }
-
-    .main-nav .nav-links li:last-child .btn {
-        width: calc(100% - var(--spacing-md)); /* Button width with padding */
-        margin: 0 auto; /* Center the button */
-        font-size: var(--font-size-nav);
-    }
-
-    .hamburger-menu {
-        display: block; /* Show hamburger on mobile */
-    }}
 
 /* Desktop and larger screens (min-width: 993px) - No specific media query needed if default styles are for desktop */
 /* The general styles at the top of the CSS file will apply for these larger screens. */
