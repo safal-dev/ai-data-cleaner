@@ -157,7 +157,7 @@ section {
     display: block;
     width: 25px;
     height: 3px;
-    background-color: var(--color-blue-primary); /* Green bars */
+    background-color: var(--color-white); /* Green bars */
     margin: 5px 0;
     transition: all var(--transition-speed-fast);
 }
