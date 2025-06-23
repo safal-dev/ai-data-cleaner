@@ -178,88 +178,64 @@ def call_gemini_api(prompt):
 
 def call_gemini_vision_api(image_parts, user_instructions):
     """
-    Sends images and text instructions to a Gemini Vision model and returns extracted data,
-    along with input/output token counts.
-    image_parts: A list of dicts, e.g., [{"mime_type": "image/jpeg", "data": b"..."}]
-    user_instructions: Text instructions for Gemini.
-    Returns: tuple (cleaned_text, total_input_tokens, total_output_tokens)
+    Sends images and text instructions to a Gemini Vision model and returns extracted data
+    as a clean CSV string, along with token counts.
     """
     genai.configure(api_key=settings.GEMINI_API_KEY)
-
-    # CRITICAL: Use a multimodal model for vision tasks. 'gemini-1.5-pro-latest' supports images.
-    model_name = 'models/gemini-2.0-flash' 
+    
+    # Use a model that supports vision, like 'gemini-1.5-flash'
+    model_name = 'models/gemini-2.0-flash'
     model = genai.GenerativeModel(model_name)
 
-    total_input_tokens = 0
-    total_output_tokens = 0
+    # --- START OF THE FIX: Create a more detailed prompt ---
+
+    # Combine the user's simple instruction with our detailed formatting rules.
+    full_system_prompt = f"""
+    You are an expert data extraction assistant. Your task is to analyze the provided image(s) and extract the specific information requested by the user.
+
+    USER'S INSTRUCTION: "{user_instructions}"
+
+    YOUR TASK:
+    1.  Analyze the image(s) to find the data requested in the user's instruction.
+    2.  Format the extracted data as a raw CSV (Comma-Separated Values).
+    3.  The first line of the CSV must be the header row. The header names should be based on the user's instruction (e.g., "Name,Email,Phone Number").
+    4.  Each subsequent row should contain the data for one extracted entity.
+    5.  Do NOT include any introductory text, explanations, or markdown formatting (like ```) in your response. Only return the raw CSV data.
+    """
+
+    # --- END OF THE FIX ---
 
     content_parts = []
-    content_parts.extend(image_parts) # Add image data
-    content_parts.append({"text": user_instructions}) # Add text instructions
+    content_parts.extend(image_parts) # Add the image data
+    content_parts.append({"text": full_system_prompt}) # Add our new, detailed prompt
 
     try:
-        response = model.generate_content(
-            content_parts,
-            safety_settings=[ # Recommended safety settings for API calls
-                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
-            ],
-            generation_config=genai.GenerationConfig(
-                response_mime_type="text/plain", # Request plain text for easier parsing
-            )
-        )
+        response = model.generate_content(content_parts)
 
-        # Access token usage from usage_metadata
+        # Token count logic remains the same
+        total_input_tokens = 0
+        total_output_tokens = 0
         if hasattr(response, 'usage_metadata') and response.usage_metadata:
             total_input_tokens = response.usage_metadata.prompt_token_count
             total_output_tokens = response.usage_metadata.candidates_token_count
 
+        # The robust text cleaning you already have is still good to keep as a fallback
         cleaned_text = response.text.strip()
-        # Robust cleaning for vision model output, similar to text model
-        if cleaned_text.startswith("```csv"):
-            cleaned_text = cleaned_text[len("```csv"):].strip()
-        if cleaned_text.startswith("```"):
-            cleaned_text = cleaned_text[len("```"):].strip()
-        if cleaned_text.endswith("```"):
-            cleaned_text = cleaned_text[:-len("```")].strip()
+        if cleaned_text.startswith("```csv") and cleaned_text.endswith("```"):
+            cleaned_text = cleaned_text[len("```csv"):].rstrip("```").strip()
+        elif cleaned_text.startswith("```") and cleaned_text.endswith("```"):
+            cleaned_text = cleaned_text[len("```"):].rstrip("```").strip()
         
-        # Split into lines for more granular cleaning and pipe-delimited table conversion
-        output_lines = cleaned_text.splitlines()
-        processed_lines = []
-        for i, line in enumerate(output_lines):
-            stripped_line = line.strip()
-            
-            # Skip markdown table separator lines (like |---|---|)
-            if all(c == '-' or c == '|' or c.isspace() for c in stripped_line) and len(stripped_line) > 0:
-                continue 
-
-            # Attempt to detect and remove conversational intros (e.g., "Okay here's the information...")
-            if i == 0 and not ',' in stripped_line and not stripped_line.startswith('|'):
-                if "okay" in stripped_line.lower() or "here's the information" in stripped_line.lower():
-                    continue
-
-            # If it's a pipe-delimited line, convert it to comma-delimited CSV
-            if stripped_line.startswith('|') and stripped_line.endswith('|'):
-                parts = [p.strip() for p in stripped_line.strip('|').split('|')]
-                valid_parts = [p for p in parts if p] # Remove empty parts from extra pipes
-                if valid_parts:
-                    processed_lines.append(','.join(valid_parts))
-            else:
-                # Assume it's already a CSV line or other text that should be included
-                processed_lines.append(stripped_line)
-        
-        final_cleaned_output = '\n'.join(processed_lines)
-        
-        if not final_cleaned_output.strip():
-            raise RuntimeError("AI response was cleaned, but resulted in empty data.")
-        
-        return final_cleaned_output, total_input_tokens, total_output_tokens
+        # Now, the 'cleaned_text' should be in the correct CSV format from the start
+        return cleaned_text, total_input_tokens, total_output_tokens
 
     except Exception as e:
-        raise RuntimeError(f"Gemini Vision API call failed: {e}. Please ensure your API key is correct and valid. If using the Generative AI library, ensure it's properly configured.")
-
+        # It's better to return a failure indicator than to raise an exception here,
+        # so the view can handle it gracefully.
+        print(f"Gemini Vision API Error: {e}")
+        error_message = f"Gemini Vision API call failed: {e}."
+        # We will return None for the text to signal failure to the view.
+        return None, 0, 0
 
 def calculate_gemini_cost(model_name, input_tokens, output_tokens):
     """
