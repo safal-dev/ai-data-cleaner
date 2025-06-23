@@ -226,28 +226,35 @@
         font-size: var(--font-size-body); /* Standard body font size */
     }
 
-    .instruction-box {
-        padding: var(--spacing-md); /* Reduced padding for instruction box */
-        margin-top: var(--spacing-lg);
-        margin-bottom: var(--spacing-lg);
-        min-height: auto; /* Allow height to adjust naturally on very small screens */
-        max-height: 250px; /* Still apply a max-height with overflow */
-    }
+/* In your mobile CSS section (e.g., @media (max-width: 768px) { ... }) */
 
-    .instruction-box-heading {
-        font-size: var(--font-size-heading3); /* Smaller heading for instruction box */
-        margin-bottom: var(--spacing-md);
-    }
+.instruction-box {
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    min-height: auto;
+    
+    /* --- THE FIX --- */
+    /* On mobile, align content to the left instead of centering it. */
+    align-items: flex-start; 
+}
 
-    .instruction-list {
-        padding-left: var(--spacing-sm); /* Adjusted padding for list */
-        max-width: 100%; /* Allow full width of content for readability */
-    }
+.instruction-box-heading {
+    font-size: var(--font-size-heading3);
+    margin-bottom: var(--spacing-md);
+    /* OPTIONAL: You might want the heading to be left-aligned on mobile too. */
+    text-align: left; 
+}
 
-    .instruction-list li {
-        font-size: 0.9em; /* Slightly smaller text for list items */
-        margin-bottom: var(--spacing-xs);
-    }
+.instruction-list {
+    padding-left: var(--spacing-sm); 
+    max-width: 100%;
+}
+
+.instruction-list li {
+    font-size: 0.9em;
+    margin-bottom: var(--spacing-xs);
+}
 }
 
 @media (min-width: 577px) and (max-width: 768px) { /* Tablets and larger phones (e.g., iPad Mini, larger phones in landscape) */
@@ -307,7 +314,7 @@
     .instruction-box {
         padding: var(--spacing-xl);
         min-height: 250px;
-        max-height: 350px;
+        /* max-height: 350px; */
     }
     .instruction-list {
         max-width: 700px; /* Wider content for readability */
