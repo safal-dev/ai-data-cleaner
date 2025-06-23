@@ -415,3 +415,24 @@ body {
     margin-top: 5px;
 }
 
+@media (max-width: 768px) {
+
+    /* Assuming the buttons are in a container like this */
+    .action-buttons-container {
+        flex-direction: column; /* THE KEY FIX: Stack the buttons vertically */
+        align-items: stretch;   /* Make buttons fill the full width of the container */
+        width: 100%;            /* Ensure the container takes up full available width */
+        gap: 15px;              /* Add some space between the stacked buttons */
+    }
+
+    /* Make both buttons have a consistent look on mobile */
+    .select-instruction-button,
+    .clean-data-button {
+        width: 100%;         /* Ensure buttons stretch to fill the container */
+        padding: 15px;       /* Increase padding for better touch targets */
+        font-size: 1.1em;    /* Make font size consistent and readable */
+        text-align: center;  /* Center the text inside the buttons */
+        margin: 0;           /* Remove any horizontal margins */
+    }
+}
+
