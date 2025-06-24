@@ -436,3 +436,49 @@ body {
     }
 }
 
+/* static/css/process_data.css */
+
+/* --- ADD THESE NEW STYLES --- */
+
+.text-area-container {
+    width: 100%;
+    margin-top: var(--spacing-lg); /* Add space between file area and text area */
+    text-align: left;
+}
+
+.text-area-container label {
+    display: block;
+    font-weight: 600;
+    color: var(--color-white);
+    margin-bottom: var(--spacing-xs);
+    font-size: 1.1em;
+}
+
+.text-area-container .text-area-description {
+    font-size: 0.9em;
+    color: var(--color-text-light);
+    margin-bottom: var(--spacing-md);
+    max-width: 800px;
+}
+
+.text-area-container textarea {
+    width: 100%;
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-card-bg-darker);
+    color: var(--color-text-light);
+    font-family: inherit;
+    font-size: 1em;
+    resize: vertical; /* Allow vertical resizing only */
+    box-sizing: border-box; /* Important for padding and width */
+    min-height: 150px;
+}
+
+.text-area-container textarea:focus {
+    outline: none;
+    border-color: var(--color-accent-light);
+    box-shadow: 0 0 0 2px rgba(106, 130, 251, 0.3);
+}
+
+/* --- END OF NEW STYLES --- */

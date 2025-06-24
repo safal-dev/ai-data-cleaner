@@ -64,6 +64,16 @@
             </div>
         </div>
 
+            {# --- ADD THIS NEW BLOCK FOR THE TEXTAREA --- #}
+        <div class="text-area-container">
+        <label for="pasted_text_area">Or Paste Your Data Here</label>
+        <p class="text-area-description">
+            Copy and paste data directly from your CRM or spreadsheet. 
+            Ensure each piece of information (like name, email, phone) is separated by a comma, tab, or is on a new line.
+        </p>
+        <textarea id="pasted_text_area" name="pasted_text" rows="10" placeholder="e.g. John Doe, john@example.com, 555-1234..."></textarea>
+        </div>
+
         <div class="instruction-selection-display">
             <p>Current Instruction: <span id="selectedInstructionName">{{ default_instruction.name|default:"(None Selected - using default)" }}</span></p>
             <input type="hidden" id="selectedInstructionId" name="selected_instruction_id" value="{{ default_instruction.pk|default:'' }}">
