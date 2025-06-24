@@ -390,52 +390,42 @@ def process_digital_data_view(request):
         # Concatenate all DataFrames into one
         combined_input_df = pd.concat(combined_data, ignore_index=True).fillna('')
         gemini_prompt = format_gemini_prompt(combined_input_df, user_instructions)
+
     try:
-        # Call the updated Gemini API function.
-        cleaned_csv_output, input_tokens, output_tokens = call_gemini_api(gemini_prompt)
+        cleaned_csv_output = call_gemini_api(gemini_prompt)
 
-        if cleaned_csv_output is None:
-            messages.error(request, "AI processing failed. Please check your API key or try again.")
-            return redirect('dashboard')
-        
         if not cleaned_csv_output.strip():
-            messages.warning(request, "Gemini returned an empty response. Please check your instructions and input data.")
-            return redirect('process_digital_data')
+            messages.warning(
+                request,
+                "Gemini returned an empty response. Please check your default instructions and input data."
+            )
+            return redirect('index')
 
-        # --- Calculate cost and update user's profile ---
-        model_used = 'gemini-1.5-flash' # Or whatever model you use
-        cost = calculate_gemini_cost(request.user, model_used, input_tokens, output_tokens)
-
-        profile.total_input_tokens += input_tokens
-        profile.total_output_tokens += output_tokens
-        profile.total_cost_usd += cost
-        profile.cleans_this_month += 1
-        profile.save()
-
-        # --- Create a TransactionRecord for this usage event ---
-        TransactionRecord.objects.create(
-            user=request.user,
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
-            cost_usd=cost,
-            transaction_type='digital',
-        )
-
-        # --- Create the downloadable CSV file response ---
+        # Serve the cleaned CSV as a download
         response = HttpResponse(cleaned_csv_output, content_type='text/csv')
         default_name = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_CleanedLeads.csv"
         response['Content-Disposition'] = f'attachment; filename="{default_name}"'
 
+        # Increment quota AFTER successful processing and before returning response
+        if request.user.is_authenticated:
+            request.user.profile.cleans_this_month += 1
+            request.user.profile.save()
+        else:
+            request.session['anonymous_cleans'] += 1
+            request.session.modified = True  # Ensure the session is saved
+
         return response
 
     except RuntimeError as e:
-            # THE FIX: On error, send a message and redirect to a SAFE page.
-        messages.error(request, f"AI Processing Error: {str(e)}")
-        return redirect('dashboard') # Redirect to the dashboard
+        # Catch custom RuntimeErrors from call_gemini_api
+        messages.error(request, f"AI Processing Error: {e}")
+        return redirect('index')
+
     except Exception as e:
-            # THE FIX: Same here for any other unexpected error.
-        messages.error(request, f"An unexpected error occurred during data processing: {str(e)}")
-        return redirect('dashboard') # Redirect to the dashboard
+        # Catch any other unexpected errors during process_data
+        messages.error(request, f"An unexpected error occurred during data processing: {e}")
+        return redirect('index')
+
 
 
 @login_required
