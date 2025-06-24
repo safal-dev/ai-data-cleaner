@@ -390,29 +390,50 @@ def process_digital_data_view(request):
         # Concatenate all DataFrames into one
         combined_input_df = pd.concat(combined_data, ignore_index=True).fillna('')
         gemini_prompt = format_gemini_prompt(combined_input_df, user_instructions)
+    try:
+        # Call the updated Gemini API function.
+        cleaned_csv_output, input_tokens, output_tokens = call_gemini_api(gemini_prompt)
 
-        try:
-            # (The rest of your AI call, cost calculation, and response generation logic is correct)
-            # ...
-            # cleaned_csv_output, input_tokens, output_tokens = call_gemini_api(...)
-            # ... update profile ...
-            # ... create transaction record ...
-            # ... create and return HttpResponse ...
-
-            # Placeholder for a successful run
-            return HttpResponse("Success! AI processing complete.", content_type="text/plain")
-
-        except Exception as e:
-            messages.error(request, f"An unexpected error occurred during AI processing: {str(e)}")
+        if cleaned_csv_output is None:
+            messages.error(request, "AI processing failed. Please check your API key or try again.")
+            return redirect('dashboard')
+        
+        if not cleaned_csv_output.strip():
+            messages.warning(request, "Gemini returned an empty response. Please check your instructions and input data.")
             return redirect('process_digital_data')
 
-    # --- GET request logic ---
-    else:
-        context = {
-            'instruction_sets': instruction_sets,
-            'default_instruction': default_instruction
-        }
-        return render(request, 'leads/process_digital_data.html', context)
+        # --- Calculate cost and update user's profile ---
+        model_used = 'gemini-1.5-flash' # Or whatever model you use
+        cost = calculate_gemini_cost(request.user, model_used, input_tokens, output_tokens)
+
+        profile.total_input_tokens += input_tokens
+        profile.total_output_tokens += output_tokens
+        profile.total_cost_usd += cost
+        profile.cleans_this_month += 1
+        profile.save()
+
+        # --- Create a TransactionRecord for this usage event ---
+        TransactionRecord.objects.create(
+            user=request.user,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            cost_usd=cost,
+            transaction_type='digital',
+        )
+
+        # --- Create the downloadable CSV file response ---
+        response = HttpResponse(cleaned_csv_output, content_type='text/csv')
+        default_name = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_CleanedLeads.csv"
+        response['Content-Disposition'] = f'attachment; filename="{default_name}"'
+
+        return response
+
+    except RuntimeError as e:
+        messages.error(request, f"AI Processing Error: {str(e)}")
+        return redirect('process_digital_data')
+    except Exception as e:
+        messages.error(request, f"An unexpected error occurred during data processing: {str(e)}")
+        return redirect('process_digital_data')
 
 
 @login_required
