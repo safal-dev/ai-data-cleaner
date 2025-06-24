@@ -429,11 +429,13 @@ def process_digital_data_view(request):
         return response
 
     except RuntimeError as e:
+            # THE FIX: On error, send a message and redirect to a SAFE page.
         messages.error(request, f"AI Processing Error: {str(e)}")
-        return redirect('process_digital_data')
+        return redirect('dashboard') # Redirect to the dashboard
     except Exception as e:
+            # THE FIX: Same here for any other unexpected error.
         messages.error(request, f"An unexpected error occurred during data processing: {str(e)}")
-        return redirect('process_digital_data')
+        return redirect('dashboard') # Redirect to the dashboard
 
 
 @login_required
