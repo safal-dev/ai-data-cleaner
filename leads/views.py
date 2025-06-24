@@ -301,131 +301,151 @@ def dashboard_view(request):
     }
     return render(request, 'leads/dashboard.html', context)
 
-# In leads/views.py
+@login_required
+# In your leads/views.py file
 
 @login_required
 def process_digital_data_view(request):
     """
-    Handles the page for processing digital files (Excel/CSV/Text) AND pasted text.
-    Processes data using the Gemini API, tracks token usage, and calculates cost.
+    Handles the page for processing digital files (Excel/CSV/Text) and pasted text.
+    - Validates user has instructions.
+    - Processes multiple data sources.
+    - Tracks token usage and cost.
+    - Returns a downloadable CSV on success.
+    - Redirects to a safe page on failure.
     """
-    # Get all instruction sets for the user to populate the selection modal.
+    # 1. Get all instruction sets for the user.
     instruction_sets = InstructionSet.objects.filter(user=request.user).order_by('name')
 
-    # THE CRITICAL CHECK: Redirect if the user has no instructions.
-    if not instruction_sets.exists() and request.method == 'GET':
+    # 2. CRITICAL CHECK: Redirect if no instructions exist (for GET and POST).
+    if not instruction_sets.exists():
         messages.info(request, "Welcome! Please create your first AI instruction set to get started.")
-        return redirect('manage_instructions')
+        return redirect('manage_instructions') # URL name for your instruction creation page
 
     # Find the default instruction to pre-fill the form.
     default_instruction = instruction_sets.filter(is_default=True).first()
 
     # --- Start of POST request logic ---
     if request.method == 'POST':
-        # (This part - profile, quota, and instruction selection - is the same and correct)
+        # Get user profile and check quota
         profile = request.user.profile
         profile.check_and_reset_quota()
         if profile.cleans_this_month >= profile.monthly_quota:
             messages.error(request, f"You have reached your monthly data cleaning limit ({profile.monthly_quota}).")
             return redirect('dashboard')
 
+        # Get instruction set from form
         selected_instruction_id = request.POST.get('selected_instruction_id')
-        selected_instruction = instruction_sets.filter(pk=selected_instruction_id).first() if selected_instruction_id else None
+        selected_instruction = instruction_sets.filter(pk=selected_instruction_id).first()
         if not selected_instruction:
+            # If nothing was selected, fall back to default or the very first one available
             selected_instruction = default_instruction or instruction_sets.first()
-        if not selected_instruction:
-            messages.error(request, "Could not find an instruction set to use. Please create or set a default.")
-            return redirect('manage_instructions')
         user_instructions = selected_instruction.instructions.strip()
 
-        # --- THIS IS THE COMBINED LOGIC ---
-
+        # --- Data Gathering and Parsing Logic ---
         pasted_text = request.POST.get('pasted_text', '').strip()
         uploaded_files = request.FILES.getlist('digital_files')
 
-        # Check if the user provided any data at all
         if not pasted_text and not uploaded_files:
             messages.error(request, "Please upload at least one file or paste some text data.")
-            return redirect('process_digital_data')
+            return redirect('process_digital_data') # Redirect back to the same page to show the form again
 
         combined_data = [] # This will hold DataFrames from all sources
 
-        # 1. Process uploaded files (your existing logic is excellent for this)
+        # Process uploaded files
         for uploaded_file in uploaded_files:
             try:
-                # ... (your full, detailed code for parsing csv, xlsx, txt files) ...
-                # This logic is great, no changes needed here. I'm summarizing it.
-                df = pd.DataFrame() # Placeholder
+                # This is a summary of your excellent, detailed parsing logic.
+                # Your original code for this part is great and should be used here.
+                df = None
                 file_extension = os.path.splitext(uploaded_file.name)[1].lower()
                 if file_extension == '.csv':
-                    df = pd.read_csv(uploaded_file) # Simplified for example
+                    # ... your robust csv parsing logic ...
+                    df = pd.read_csv(uploaded_file) # Simplified for this example
                 elif file_extension in ['.xls', '.xlsx']:
                     df = pd.read_excel(uploaded_file)
+                elif file_extension == '.txt':
+                    text_content = uploaded_file.read().decode('utf-8')
+                    df = pd.DataFrame([{'raw_input_data': text_content}])
                 
-                if not df.empty:
+                if df is not None and not df.empty:
                     df['_source_file'] = uploaded_file.name
                     combined_data.append(df)
             except Exception as e:
                 messages.error(request, f"Failed to process file '{uploaded_file.name}': {str(e)}")
-                continue # Move to the next file
+                continue # Safely skip to the next file
 
-        # 2. Process pasted text (from your old logic)
+        # Process pasted text
         if pasted_text:
-            # Create a DataFrame from the pasted text.
-            # Assuming it might be multi-line, we can use read_csv on a string buffer.
             try:
+                # Attempt to read pasted text as if it were a CSV file in memory
                 pasted_df = pd.read_csv(io.StringIO(pasted_text))
                 pasted_df['_source_file'] = 'Pasted_Data'
                 combined_data.append(pasted_df)
-            except Exception as e:
-                messages.warning(request, f"Could not parse pasted text as a structured table. Treating as raw text. Error: {str(e)}")
+            except Exception:
+                # If it fails, treat it as a single block of raw text
                 pasted_df = pd.DataFrame([{'raw_input_data': pasted_text, '_source_file': 'Pasted_Data'}])
                 combined_data.append(pasted_df)
 
-        # 3. Final check and processing
+        # Final check if any data was successfully processed
         if not combined_data:
             messages.error(request, "No valid data could be read from your files or pasted text.")
             return redirect('process_digital_data')
 
-        # Concatenate all DataFrames into one
+        # Combine all data sources into a single DataFrame for the AI
         combined_input_df = pd.concat(combined_data, ignore_index=True).fillna('')
         gemini_prompt = format_gemini_prompt(combined_input_df, user_instructions)
 
-    try:
-        cleaned_csv_output = call_gemini_api(gemini_prompt)
+        # --- AI Call and Response Generation ---
+        try:
+            # Ensure your call_gemini_api returns (text, in_tokens, out_tokens) on success
+            # and (None, 0, 0) on failure.
+            cleaned_csv_output, input_tokens, output_tokens = call_gemini_api(gemini_prompt)
 
-        if not cleaned_csv_output.strip():
-            messages.warning(
-                request,
-                "Gemini returned an empty response. Please check your default instructions and input data."
+            if cleaned_csv_output is None:
+                messages.error(request, "AI processing failed. This could be due to a network issue or an invalid API key. Please try again.")
+                return redirect('dashboard') # Redirect to a safe page
+
+            if not cleaned_csv_output.strip():
+                messages.warning(request, "The AI returned an empty response. Please try adjusting your instructions.")
+                return redirect('dashboard') # Redirect to a safe page
+
+            # --- Costing, Profile Update, and Transaction Logging ---
+            model_used = 'gemini-1.5-flash'
+            cost = calculate_gemini_cost(request.user, model_used, input_tokens, output_tokens)
+
+            profile.total_input_tokens += input_tokens
+            profile.total_output_tokens += output_tokens
+            profile.total_cost_usd += cost
+            profile.cleans_this_month += 1
+            profile.save()
+
+            TransactionRecord.objects.create(
+                user=request.user,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                cost_usd=cost,
+                transaction_type='digital',
             )
-            return redirect('index')
 
-        # Serve the cleaned CSV as a download
-        response = HttpResponse(cleaned_csv_output, content_type='text/csv')
-        default_name = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_CleanedLeads.csv"
-        response['Content-Disposition'] = f'attachment; filename="{default_name}"'
+            # --- Create and return the downloadable CSV file ---
+            response = HttpResponse(cleaned_csv_output, content_type='text/csv')
+            default_name = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_CleanedData.csv"
+            response['Content-Disposition'] = f'attachment; filename="{default_name}"'
+            return response
 
-        # Increment quota AFTER successful processing and before returning response
-        if request.user.is_authenticated:
-            request.user.profile.cleans_this_month += 1
-            request.user.profile.save()
-        else:
-            request.session['anonymous_cleans'] += 1
-            request.session.modified = True  # Ensure the session is saved
+        except Exception as e:
+            # Catch any other unexpected errors during the process
+            messages.error(request, f"An unexpected error occurred during AI processing: {str(e)}")
+            return redirect('dashboard') # Redirect to a safe page
 
-        return response
-
-    except RuntimeError as e:
-        # Catch custom RuntimeErrors from call_gemini_api
-        messages.error(request, f"AI Processing Error: {e}")
-        return redirect('index')
-
-    except Exception as e:
-        # Catch any other unexpected errors during process_data
-        messages.error(request, f"An unexpected error occurred during data processing: {e}")
-        return redirect('index')
-
+    # --- GET request logic (when the page is first loaded) ---
+    else:
+        context = {
+            'instruction_sets': instruction_sets,
+            'default_instruction': default_instruction
+        }
+        return render(request, 'leads/process_digital_data.html', context)
 
 
 @login_required
