@@ -10,10 +10,9 @@
 {% block content %}
      <header class="main-header">
         <div class="container">
-            <a href="{% url 'index' %}" class="logo">
-                <i class="fas fa"></i> {# Font Awesome diamond icon #}
-                Lead Cleaner
-            </a>
+        <a href="{% url 'index' %}" class="logo">
+             <img src="{% static 'images/bizdata.shaara.app-logo.png' %}" alt="Lead Cleaner Logo">
+        </a>
 
             <nav class="main-nav">
                 <button class="hamburger-menu" aria-label="Toggle navigation">
