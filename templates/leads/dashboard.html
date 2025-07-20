@@ -72,3 +72,21 @@
 
 </div>
 {% endblock %}
+
+{% block extra_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Find the hamburger menu and nav links on *this* page
+            const hamburger = document.querySelector('.hamburger-menu');
+            const navLinks = document.querySelector('.nav-links');
+
+            // Add the click event listener
+            if (hamburger && navLinks) {
+                hamburger.addEventListener('click', function() {
+                    navLinks.classList.toggle('active');
+                    hamburger.classList.toggle('active');
+                });
+            }
+        });
+    </script>
+{% endblock extra_js %}
