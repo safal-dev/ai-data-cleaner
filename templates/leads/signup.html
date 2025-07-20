@@ -1,10 +1,8 @@
 {% extends 'leads/base.html' %}
 {% load static %}
 
-
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/signup.css' %}">
-    {# If you need to override any base.html styles that conflict, place signup.css after base.css if you have one #}
 {% endblock %}
 
 {% block content %}
@@ -16,8 +14,25 @@
         <div class="auth-card-body">
             <form method="post">
                 {% csrf_token %}
-                {{ form.as_p }}
-                <button type="submit" class="btn btn-primary-custom">Sign Up</button> {# Using a new custom button class #}
+
+                {# --- THE FIX STARTS HERE --- #}
+                {# We will now loop through each field manually instead of using form.as_p #}
+                
+                {% for field in form %}
+                    <div class="form-field-wrapper">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="form-errors">
+                                {{ field.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                
+                {# --- THE FIX ENDS HERE --- #}
+                
+                <button type="submit" class="btn btn-primary-custom">Sign Up</button>
             </form>
             <hr class="auth-divider" />
             <p class="auth-link-text">Already have an account? <a href="{% url 'signin' %}">Sign In here</a>.</p>
