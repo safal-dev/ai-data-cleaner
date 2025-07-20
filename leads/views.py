@@ -663,8 +663,25 @@ def process_physical_data_view(request):
 # --- Instruction Set Management Views ---
 @login_required
 def manage_instructions(request):
-    instruction_sets = InstructionSet.objects.filter(user=request.user).order_by('name')
-    return render(request, 'leads/manage_instructions.html', {'instruction_sets': instruction_sets})
+    """
+    Displays a list of the user's instruction sets.
+    If the user has no instructions, redirects them to the creation page.
+    """
+    # Get all instruction sets for the logged-in user
+    instruction_sets = InstructionSet.objects.filter(user=request.user)
+
+    # --- THE FIX: Check if the queryset is empty ---
+    if not instruction_sets.exists():
+        # If the user has zero instructions, send a helpful one-time message
+        messages.info(request, "Let's create your first AI instruction set!")
+        # Redirect them directly to the form to create a new one
+        return redirect('instruction_form') # Assumes 'instruction_form' is your URL name for the create page
+    
+    # --- If the check passes, the original logic runs ---
+    context = {
+        'instruction_sets': instruction_sets.order_by('name'),
+    }
+    return render(request, 'leads/manage_instructions.html', context)
 
 @login_required
 def create_instruction(request):
