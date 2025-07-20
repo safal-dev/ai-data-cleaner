@@ -334,3 +334,50 @@ body {
 .helptext ul {
     display: none;
 }
+
+/* static/css/signup.css */
+
+/* --- ADD THESE NEW STYLES FOR THE FORM TEXT --- */
+
+/* Style for the labels (Username:, Password:, etc.) */
+.auth-card-body label {
+    display: block; /* Make each label take its own line */
+    font-weight: 600; /* Make the font slightly bolder */
+    color: #cccccc;  /* A softer white for better readability */
+    margin-bottom: 8px; /* Add some space between the label and the input box */
+    text-align: left; /* Ensure text is aligned to the left */
+}
+
+/* Style for the <p> tag that wraps each form field when using form.as_p */
+/* This removes the default paragraph margins for a cleaner look */
+.auth-card-body form p {
+    margin-bottom: 20px; /* Add vertical space between form fields */
+}
+
+/* Style for the "Already have an account?" text */
+.auth-link-text {
+    text-align: center;
+    color: #aaaaaa; /* A light grey for secondary text */
+    font-size: 0.9em;
+    margin-top: 20px;
+}
+
+/* Style for the actual "Sign In here." link */
+.auth-link-text a {
+    color: #8a9fff; /* A nice light blue to match your button */
+    font-weight: 600;
+    text-decoration: none; /* Remove the underline */
+    transition: color 0.2s ease;
+}
+
+.auth-link-text a:hover {
+    color: #ffffff; /* Make the link brighter on hover */
+    text-decoration: underline;
+}
+
+/* Style for the divider line <hr> */
+.auth-divider {
+    border: none;
+    border-top: 1px solid #444444; /* A subtle, dark divider */
+    margin-top: 25px;
+}
