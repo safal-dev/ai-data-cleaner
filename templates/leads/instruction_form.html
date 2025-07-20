@@ -65,9 +65,9 @@
             <button type="submit" class="btn-save">Save</button>
         </form>
     </div>
+{% endblock %}
 
 {% block extra_js %}
-    {# JavaScript for hamburger menu #}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const hamburgerMenu = document.querySelector('.hamburger-menu');
@@ -82,4 +82,3 @@
         });
     </script>
 {% endblock extra_js %}
-{% endblock %}
