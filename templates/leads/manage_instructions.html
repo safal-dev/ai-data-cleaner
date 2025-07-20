@@ -129,3 +129,24 @@
         }
     </script>
 {% endblock %}
+
+{% block extra_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Find the hamburger menu and nav links on *this* page
+            const hamburger = document.querySelector('.hamburger-menu');
+            const navLinks = document.querySelector('.nav-links');
+
+            // Add the click event listener
+            if (hamburger && navLinks) {
+                hamburger.addEventListener('click', function() {
+                    navLinks.classList.toggle('active');
+                    hamburger.classList.toggle('active');
+                });
+            }
+
+            // Your other JavaScript for this page (like the handleSetDefault function)
+            // can also go inside this DOMContentLoaded listener if you move it from the content block.
+        });
+    </script>
+{% endblock extra_js %}
