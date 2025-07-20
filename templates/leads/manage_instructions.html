@@ -39,43 +39,44 @@
                             <th class="text-center">Actions</th> {# Added an explicit Actions column #}
                         </tr>
                     </thead>
-                    <tbody>
-                        {% for instruction_set in instruction_sets %}
-                            {# Make the entire row clickable for editing #}
-                            <tr class="instruction-row {% if instruction_set.is_default %}is-default{% endif %}"
-                                onclick="window.location.href = '{% url 'edit_instruction' instruction_set.pk %}';">
-                                <td>
-                                    <div class="instruction-name">{{ instruction_set.name }}</div>
+<tbody>
+    {% for instruction_set in instruction_sets %}
+        <tr class="instruction-row {% if instruction_set.is_default %}is-default{% endif %}"
+            onclick="window.location.href = '{% url 'edit_instruction' instruction_set.pk %}';">
+            
+            {# --- THE FIX: Add data-label attributes --- #}
+            <td data-label="Instruction Name">
+                <div class="instruction-name">{{ instruction_set.name }}</div>
+            </td>
 
-                                </td>
+            <td data-label="Default" class="text-center">
+                {% if instruction_set.is_default %}
+                    {# Display a solid star for the default item #}
+                    <i class="fas fa-star" style="color: #ffc107;" title="Default Instruction"></i>
+                {% elif not instruction_set.is_default %}
+                    {# Display the button to set as default for non-default items #}
+                    <form action="{% url 'set_default_instruction' instruction_set.pk %}" method="post" class="inline-form" onclick="event.stopPropagation();">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-action btn-set-default" title="Set as Default">
+                            <i class="far fa-star"></i> {# Using an outline star #}
+                        </button>
+                    </form>
+                {% endif %}
+            </td>
 
-                                <td class="text-center">
-                                    {% if not instruction_set.is_default %}
-                                        <form action="{% url 'set_default_instruction' instruction_set.pk %}" method="post" class="inline-form">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn-action btn-set-default" title="Set as Default">
-                                                <i class="fas fa-star"></i> {# Using Font Awesome icon for set default #}
-                                            </button>
-                                        </form>
-                                    {% endif %}
-                                </td>
-                                <td class="actions-cell">
-                                    {# Edit action is now handled by clicking the row #}
-                                    {# Delete and Set Default actions are placed here, outside the row click #}
-                                    {% if not instruction_set.is_default or instruction_sets.count > 1 %}
-                                        <form action="{% url 'delete_instruction' instruction_set.pk %}" method="post" class="inline-form" onsubmit="return confirm('Are you sure you want to delete \'{{ instruction_set.name }}\'?');">
-                                            {% csrf_token %}
-                                        <button type="submit" class="btn-action btn-delete" title="Delete Instruction" onclick="event.stopPropagation();">
-                                        <i class="fas fa-trash"></i>
-                                        </button>
-                                        </form>
-                                    {% endif %}
-                                    {# Set Default button only if it's not already default and there's a need to change #}
-
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
+            <td data-label="Actions" class="actions-cell">
+                {% if instruction_sets.count > 1 %}
+                    <form action="{% url 'delete_instruction' instruction_set.pk %}" method="post" class="inline-form" onsubmit="return confirm('Are you sure you want to delete \'{{ instruction_set.name }}\'?');" onclick="event.stopPropagation();">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-action btn-delete" title="Delete Instruction">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                {% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+</tbody>
                 </table>
             </div> {# /.table-container #}
         {% else %}
