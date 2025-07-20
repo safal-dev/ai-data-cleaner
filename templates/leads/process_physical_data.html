@@ -114,10 +114,10 @@
 
 
 {% block extra_js %}
-    {# This loads all the complex form logic from our new file #}
+    {# THE FIX: Point to the new JavaScript file for this specific form #}
     <script src="{% static 'js/process_physical_data_form.js' %}"></script>
 
-    {# This is the simple script for the hamburger menu #}
+    {# The hamburger menu script remains the same #}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const hamburgerMenu = document.querySelector('.hamburger-menu');
