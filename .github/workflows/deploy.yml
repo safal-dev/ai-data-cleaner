@@ -22,35 +22,31 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Navigate to the project directory
+            # Navigate to the OUTER project directory first
             cd /var/www/ai-data-cleaner
 
-            # --- THE FIX for conflicting changes ---
-            # Discard any local changes on the server to ensure a clean pull
+            # Forcefully reset to the latest version from GitHub to avoid conflicts
             echo "--- 1. Resetting local changes on server ---"
-            git reset --hard origin/main
+            # We must cd into the inner git repo to run git commands
+            cd ai-data-cleaner && git reset --hard origin/main && git pull origin main && cd ..
 
-            # Pull the latest code from GitHub
-            echo "--- 2. Pulling latest code ---"
-            git pull origin main
-
-            # --- Add a check to see the files AFTER the pull ---
-            echo "--- 3. Verifying directory contents ---"
-            ls -la static/images/
-
-            # Activate the virtual environment
+            # --- THE FIX: Activate the virtual environment from the outer directory ---
+            echo "--- 2. Activating virtual environment ---"
             source env/bin/activate
 
-            # Install dependencies
+            # --- THE FIX: Navigate into the INNER directory before running commands ---
+            cd ai-data-cleaner
+            echo "--- 3. Now inside $(pwd) ---"
+            
+            # Now we are in the correct directory, so these commands will work
             echo "--- 4. Installing dependencies ---"
             pip install -r requirements.txt
 
-            # Run Django management commands
             echo "--- 5. Running Django commands ---"
             python manage.py migrate
             python manage.py collectstatic --no-input
 
-            # Restart the Gunicorn service (this will now work without a password)
+            # Restart the Gunicorn service
             echo "--- 6. Restarting application server ---"
             sudo systemctl restart gunicorn.service
 
