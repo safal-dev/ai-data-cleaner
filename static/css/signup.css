@@ -330,3 +330,7 @@ body {
 .form-container button[type="submit"]:hover {
     opacity: 0.9;
 }
+
+.helptext ul {
+    display: none;
+}
