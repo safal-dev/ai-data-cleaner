@@ -343,6 +343,24 @@
             }
             console.log("DEBUG (Digital): Initial instruction display set to:", selectedInstructionNameSpan.textContent);
         });
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const hamburgerMenu = document.querySelector('.hamburger-menu');
+            const navLinks = document.querySelector('.nav-links');
+
+            if (hamburgerMenu && navLinks) {
+                hamburgerMenu.addEventListener('click', () => {
+                    navLinks.classList.toggle('active');
+                    hamburgerMenu.classList.toggle('active');
+                });
+            }
+
+            // --- Note: I've removed the long JS from your previous HTML ---
+            // It's much better to move that complex code into its own file
+            // like 'process_data_form.js' and link it like I did above.
+            // If you haven't done that, you can paste your file upload/modal JS here.
+        });
     </script>
 {% endblock extra_js %}
 {% endblock content %}
