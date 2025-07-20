@@ -323,6 +323,60 @@
 }
 
 
+/* static/css/landing_page.css */
+
+/* --- ADD THIS NEW MEDIA QUERY BLOCK AT THE END OF THE FILE --- */
+
+/* =====================================
+   Responsive Adjustments for Landing Page
+   ===================================== */
+
+@media (max-width: 768px) {
+    /* --- Header Adjustments for Mobile --- */
+    .main-header .container {
+        flex-direction: row; /* Keep logo and hamburger on same line */
+        justify-content: space-between;
+        align-items: center;
+    }
+
+
+    /* --- Hero Section Adjustments for Mobile --- */
+    .hero-section {
+        padding: 60px 20px; /* Reduce vertical and horizontal padding */
+        text-align: center; /* Center-align all text content on mobile */
+    }
+
+    .hero-content-box {
+        padding: 20px; /* Add some internal padding to the box */
+        /* The background and border-radius will be inherited */
+    }
+
+    .hero-content-box h1 {
+        font-size: 2.2rem; /* Make the main heading smaller but still impactful */
+        line-height: 1.2;
+    }
+
+    .hero-content-box p {
+        font-size: 1rem; /* Adjust paragraph font size for readability */
+        margin-bottom: 30px; /* More space before the button */
+    }
+
+    .hero-content-box .btn-gradient {
+        width: 100%; /* Make the button full-width for an easier tap target */
+        max-width: 300px; /* But don't let it get too wide on larger mobile screens */
+        padding: 15px;
+        font-size: 1.1rem;
+    }
+
+    /* --- Other sections can be adjusted here too --- */
+    .supported-files-section h2,
+    .workflow-section h2,
+    .final-cta-section h2 {
+        font-size: 1.8rem; /* Make other section headings smaller */
+    }
+}
+
+
 
 
 /* Desktop and larger screens (min-width: 993px) - No specific media query needed if default styles are for desktop */
