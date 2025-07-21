@@ -12,7 +12,6 @@
         <a href="{% url 'index' %}" class="logo">
              <img src="{% static 'images/bizdata.shaara.app-logo.png' %}" alt="Lead Cleaner Logo">
         </a>
-
         <nav class="main-nav">
             <button class="hamburger-menu" aria-label="Toggle navigation">
                 <span class="bar"></span>
@@ -20,7 +19,7 @@
                 <span class="bar"></span>
             </button>
             <ul class="nav-links">
-                    <li><a href="{% url 'dashboard'%}">Dashboard</a></li>
+                <li><a href="{% url 'dashboard'%}">Dashboard</a></li>
                 <li><a href="{% url 'manage_instructions' %}" class="btn-gradient">Manage Instruction</a></li>
             </ul>
         </nav>
@@ -29,10 +28,9 @@
 
 <div class="process-data-wrapper">
     <div class="page-title">
-        <h1>Process Physical (Image) Data</h1> {# Specific title for physical data #}
+        <h1>Process Physical (Image) Data</h1>
     </div>
 
-    {# Display messages if any #}
     {% if messages %}
         <ul class="messages">
             {% for message in messages %}
@@ -41,64 +39,45 @@
         </ul>
     {% endif %}
 
-    <form method="post" action="{{ form_action_url }}" enctype="multipart/form-data" class="physical-data-form">
+    <form method="post" action="{% url 'process_physical_data' %}" enctype="multipart/form-data" class="physical-data-form">
         {% csrf_token %}
         <div class="file-upload-area" id="dropArea">
-            <p>Drag and drop images here</p> {# Specific description #}
+            <p>Drag and drop images here</p>
             <p>Or browse images</p>
-            
-            {# File Input: specific accept types, HIDDEN #}
-            <input type="file"
-                    id="fileInput"
-                    name="physical_images" {# Specific name for physical files #}
-                    accept="image/*" {# Specific accept types for images #}
-                    multiple style="display: none;">
-            
-            {# The 'Browse files' button is now a LABEL linked to the fileInput #}
+            <input type="file" id="fileInput" name="physical_images" accept="image/*" multiple style="display: none;">
             <label for="fileInput" class="browse-files-button" id="browseFilesButton">Browse images</label>
-
-            {# Dynamic file display area #}
-            <div id="fileDisplayArea" class="file-display-area">
-                {# Content will be added by JavaScript #}
-            </div>
+            <div id="fileDisplayArea" class="file-display-area"></div>
         </div>
 
         <div class="instruction-selection-display">
-            <p>Current Instruction: <span id="selectedInstructionName">{{ default_instruction.name|default:"(None Selected - using default)" }}</span></p>
+            <p>Current Instruction: <span id="selectedInstructionName">{{ default_instruction.name|default:"(Using default)" }}</span></p>
             <input type="hidden" id="selectedInstructionId" name="selected_instruction_id" value="{{ default_instruction.pk|default:'' }}">
         </div>
 
         <div class="action-buttons-container">
             <button type="button" class="select-instruction-button" id="selectInstructionButton">Select Instruction</button>
-            <button type="submit" class="clean-data-button">Process Image Data</button> {# Specific button text #}
+            <button type="submit" class="clean-data-button">Process Image Data</button>
         </div>
     </form>
 </div>
 
-{# Instruction Selection Modal (Same as before) #}
+<!-- Instruction Selection Modal -->
 <div id="instructionModal" class="modal">
     <div class="modal-content">
-        <span class="close-button">&times;</span>
+        <span class="close-button">×</span>
         <h2>Select Instruction</h2>
         <div class="instruction-list-container">
             {% if instruction_sets %}
                 <ul class="instruction-selection-list">
                     {% for instruction in instruction_sets %}
                         <li class="instruction-item">
-                            <input type="radio"
-                                    id="instruction-{{ instruction.pk }}"
-                                    name="instruction_radio"
-                                    value="{{ instruction.pk }}"
-                                    data-instruction-name="{{ instruction.name }}"
-                                    {% if instruction.is_default %}checked{% endif %}>
-                            <label for="instruction-{{ instruction.pk }}">{{ instruction.name }}
-                                {% if instruction.is_default %}<span class="default-tag">(Default)</span>{% endif %}
-                            </label>
+                            <input type="radio" id="instruction-{{ instruction.pk }}" name="instruction_radio" value="{{ instruction.pk }}" data-instruction-name="{{ instruction.name }}" {% if instruction.is_default %}checked{% endif %}>
+                            <label for="instruction-{{ instruction.pk }}">{{ instruction.name }} {% if instruction.is_default %}<span class="default-tag">(Default)</span>{% endif %}</label>
                         </li>
                     {% endfor %}
                 </ul>
             {% else %}
-                <p>No instructions found. Please <a href="{% url 'create_instruction' %}">create one</a>.</p>
+                <p>No instructions found. Please <a href="{% url 'instruction_form' %}">create one</a>.</p>
             {% endif %}
         </div>
         <div class="modal-buttons-container">
@@ -107,26 +86,40 @@
         </div>
     </div>
 </div>
-
-{# ... (rest of your process_physical_data.html code) ... #}
-
 {% endblock content %}
 
 
 {% block extra_js %}
-    {# THE FIX: Point to the new JavaScript file for this specific form #}
+    <!-- This script handles the drag-and-drop, modal, etc. for THIS page -->
     <script src="{% static 'js/process_physical_data_form.js' %}"></script>
 
-    {# The hamburger menu script remains the same #}
+    <!-- This script handles the hamburger menu and the loading overlay for THIS page -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // --- Hamburger Menu Logic ---
             const hamburgerMenu = document.querySelector('.hamburger-menu');
             const navLinks = document.querySelector('.nav-links');
-
             if (hamburgerMenu && navLinks) {
                 hamburgerMenu.addEventListener('click', () => {
                     navLinks.classList.toggle('active');
                     hamburgerMenu.classList.toggle('active');
+                });
+            }
+
+            // --- Loading Overlay Logic ---
+            const physicalForm = document.querySelector('.physical-data-form');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            if (physicalForm && loadingOverlay) {
+                physicalForm.addEventListener('submit', (event) => {
+                    // Optional: Add validation here to prevent showing loader if form is empty
+                    const fileInput = document.getElementById('fileInput');
+                    if (!fileInput || fileInput.files.length === 0) {
+                        // You could show an alert or message instead
+                        // event.preventDefault(); // Uncomment to stop form submission
+                        // alert("Please select a file to process.");
+                        return; // Don't show loader if no files
+                    }
+                    loadingOverlay.classList.add('visible');
                 });
             }
         });
