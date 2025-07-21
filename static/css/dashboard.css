@@ -376,17 +376,35 @@
     }
 }
 
-/* Specific styling for the logout button */
+
+
+/* In your CSS file */
+
+/* --- ADD THESE STYLES TO MAKE THE LOGOUT BUTTON LOOK LIKE A LINK --- */
+
 .logout-button {
-    color: #ff4d4d; /* A distinct red color */
-    font-weight: 600;
+    /* Reset button-specific styles */
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font: inherit; /* Use the same font as the parent element */
+    cursor: pointer;
+    
+    /* Apply the styles from your other nav links */
+    display: block;
+    padding: 10px 20px;
+    color: #ff4d4d; /* Your red color */
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    width: 100%; /* Make it take the full width of the list item */
+    text-align: left; /* Align text to the left like other links */
 }
 
 .logout-button:hover {
-    background-color: rgba(255, 77, 77, 0.15); /* A light red background on hover */
-    color: #ff6b6b; /* A brighter red on hover */
+    background-color: rgba(255, 77, 77, 0.15);
+    color: #ff6b6b;
 }
-
 
 
 
