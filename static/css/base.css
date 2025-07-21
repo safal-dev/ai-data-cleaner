@@ -1,32 +1,33 @@
-/* In your main CSS file, e.g., static/css/landing_page.css */
+/* static/css/base.css */
 
-/* --- ADD THESE STYLES FOR THE LOADING OVERLAY --- */
-
+/* --- STYLES FOR THE LOADING OVERLAY --- */
 .loading-overlay {
     position: fixed; /* Cover the entire viewport */
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black background */
+    background-color: rgba(0, 0, 0, 0.75); /* Semi-transparent black background */
     display: none; /* Hidden by default */
     justify-content: center;
     align-items: center;
     flex-direction: column;
     z-index: 9999; /* Ensure it's on top of everything else */
-    color: var(--color-white);
+    color: #ffffff;
     font-size: 1.2em;
+    font-weight: 500;
 }
 
+/* This class will be added by JavaScript to show the overlay */
 .loading-overlay.visible {
-    display: flex; /* Show the overlay */
+    display: flex;
 }
 
 .loading-overlay .spinner {
     width: 60px;
     height: 60px;
     border: 5px solid rgba(255, 255, 255, 0.3); /* Light grey border */
-    border-top-color: var(--color-white); /* White for the spinning part */
+    border-top-color: #ffffff; /* White for the spinning part */
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 20px;
@@ -34,13 +35,12 @@
 
 .loading-overlay p {
     margin: 0;
+    letter-spacing: 0.5px;
 }
 
-/* The spinning animation */
+/* The spinning animation keyframes */
 @keyframes spin {
     to {
         transform: rotate(360deg);
     }
 }
-
-/* --- END OF LOADING OVERLAY STYLES --- */
