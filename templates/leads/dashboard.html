@@ -24,12 +24,12 @@
                     
                     <li><a href="{% url 'manage_instructions' %}" class="btn-gradient">Manage Instruction</a></li>
                     <!-- ... inside your nav-links ... -->
-    <li class="nav-links">
+                    <li>
     <form action="{% url 'logout' %}" method="post" style="display: inline;">
         {% csrf_token %}
-        <button type="submit" class="btn-gradient">Logout</button>
+        <button type="submit" class="nav-link-item logout-button">Logout</button>
     </form>
-    </li>
+</li>
                 </ul>
             </nav>
         </div>
