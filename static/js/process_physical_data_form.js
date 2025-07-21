@@ -109,22 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    const physicalForm = document.querySelector('.physical-data-form');
-    const loadingOverlay = document.getElementById('loading-overlay');
-
-    if (physicalForm && loadingOverlay) {
-        physicalForm.addEventListener('submit', (event) => {
-            // Optional: check if there's a file selected
-            const fileInput = document.getElementById('fileInput');
-            if (!fileInput.files.length) {
-                alert("Please select an image to process.");
-                event.preventDefault(); // Stop the form from submitting
-                return;
-            }
-            loadingOverlay.classList.add('visible');
-        });
-    }
-
+    
     
 });
 
