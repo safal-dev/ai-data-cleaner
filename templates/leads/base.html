@@ -1,77 +1,35 @@
+{# leads/base.html (Snippet - ensure your full base.html has this structure) #}
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    {% block title %}<title>BizData: Automating Business Data Processing</title>{% endblock %}
+    {% block title %}<title>BizData: Automating the business data Processing</title>{% endblock %}
 
-    <!-- Favicons -->
-    <link rel="icon" type="image/png" href="{% static 'images/icons/bizdata-favicon.png' %}">
-    <link rel="apple-touch-icon" href="{% static 'images/icons/bizdata-favicon.png' %}">
-
-    <!-- Global CSS Libraries -->
+  <link rel="icon" type="image/png" href="{% static 'images/bizdata-favicon.png' %}">
+  <link rel="apple-touch-icon" href="{% static 'images/bizdata-favicon.png' %}">
+    {# Common CSS (e.g., Bootstrap, Font Awesome CDN if used globally) #}
+    {# Add Bootstrap and Font Awesome if you want them across your site #}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-    <!-- Your Custom Global CSS -->
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    {% block extra_css %}{% endblock %} {# THIS IS WHERE landing_page.css WILL BE INJECTED #}
 
-    <!-- Block for page-specific CSS files -->
-    {% block extra_css %}{% endblock %}
 </head>
 <body>
-
-    <!-- Loading Overlay - hidden by default, shown by JS -->
-   <div id="loading-overlay" class="loading-overlay">
-        <div class="spinner"></div>
-        <p>Processing your data, please wait...</p>
-    </div>
-
-    <!-- Main content block that child templates will fill -->
+    <div id="popup-message-container" class="popup-message-container"></div>
+    {# ... common header/navbar for logged-in users, or just the content block ... #}
     {% block content %}
     {% endblock %}
-
-    <!-- Footer -->
-    <footer class="main-footer">
+    
+    {# Common JS (e.g., Bootstrap JS bundle) #}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %} {# THIS IS WHERE your JS for hamburger will be injected #}
+        <footer class="main-footer">
         <div class="container">
-            <p class="copyright">© {% now "Y" %} BizData. All rights reserved.</p>
+            <p class="copyright">© 2025 Lead Cleaner. All rights reserved.</p>
         </div>
     </footer>
-
-    <!-- Global JavaScript Libraries -->
-    <!-- (Bootstrap JS is commented out as it seems you are not using its JS components) -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script> -->
-
-    <!-- Block for page-specific JavaScript files and inline scripts -->
-    {% block extra_js %}
-        {# This is the global script for the loading overlay. It will be on EVERY page. #}
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                // Find all forms that should trigger the loading overlay
-                // These class names must match the class on your <form> elements
-                const digitalForm = document.querySelector('.digital-data-form');
-                const physicalForm = document.querySelector('.physical-data-form');
-                const loadingOverlay = document.getElementById('loading-overlay');
-
-                const showLoader = (event) => {
-                    // You can add validation here to prevent showing the loader
-                    // if the form is empty, but for now, we'll show it on any submit.
-                    if (loadingOverlay) {
-                        loadingOverlay.classList.add('visible');
-                    }
-                };
-                
-                if (digitalForm) {
-                    digitalForm.addEventListener('submit', showLoader);
-                }
-
-                if (physicalForm) {
-                    physicalForm.addEventListener('submit', showLoader);
-                }
-            });
-        </script>
-    {% endblock extra_js %}
-
 </body>
 </html>
