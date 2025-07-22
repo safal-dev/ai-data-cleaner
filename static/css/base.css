@@ -47,3 +47,51 @@
         transform: rotate(360deg);
     }
 }
+
+/* in static/css/base.css */
+
+/* --- ADD THESE NEW STYLES FOR OVERLAY ACTION BUTTONS --- */
+
+/* This is the container for the buttons inside the overlay */
+#overlay-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px; /* Space between the buttons */
+    margin-top: 25px; /* Space between the text and the buttons */
+    width: 100%;
+}
+
+/* Base style for any button or link inside the actions container */
+#overlay-actions .btn {
+    padding: 12px 30px;
+    border-radius: 25px; /* Pill shape */
+    border: none;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none; /* For <a> tags */
+    display: inline-block;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+#overlay-actions .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Primary button style (for "Download") */
+/* Reuses the gradient from your other primary buttons */
+#overlay-actions .btn-overlay-primary {
+    background: linear-gradient(135deg, #6a82fb, #fc5c7d);
+    color: white;
+}
+
+/* Secondary button style (for "Close") */
+#overlay-actions .btn-overlay-secondary {
+    background-color: #4a4a4a; /* A dark grey */
+    color: #cccccc; /* A light grey text */
+}
+
+#overlay-actions .btn-overlay-secondary:hover {
+    background-color: #5a5a5a;
+}
