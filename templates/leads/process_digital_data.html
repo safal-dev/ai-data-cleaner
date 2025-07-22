@@ -116,76 +116,18 @@
             // --- Loading Overlay Logic ---
             const digitalForm = document.querySelector('.digital-data-form');
             const loadingOverlay = document.getElementById('loading-overlay');
-            const overlayText = document.getElementById('overlay-text');
-            const overlayActions = document.getElementById('overlay-actions');
-            const spinner = loadingOverlay.querySelector('.spinner');
-
             if (digitalForm && loadingOverlay) {
                 digitalForm.addEventListener('submit', (event) => {
-                    // 1. Prevent the default page reload
-                    event.preventDefault();
-
-                    // (Your existing validation logic is good)
-                    // ...
-
-                    // 2. Show the "Processing..." popup
-                    overlayText.textContent = 'Processing your data, please wait...';
-                    spinner.style.display = 'block';
-                    overlayActions.innerHTML = ''; // Clear old buttons
-                    loadingOverlay.classList.add('visible');
-
-                    // 3. Send form data in the background using fetch
-                    const formData = new FormData(digitalForm);
+                    const fileInput = document.getElementById('fileInput');
+                    const textArea = document.getElementById('pasted_text_area');
                     
-                    fetch("{% url 'process_digital_data' %}", {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            // The CSRF token is already in the formData, but this header is good practice
-                            'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
-                        },
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        // 4. Handle the JSON response from the server
-                        if (data.success) {
-                            // SUCCESS: Update the popup
-                            spinner.style.display = 'none'; // Hide spinner
-                            overlayText.textContent = 'Processing Complete!';
-                            
-                            // Create the download button
-                            const downloadButton = document.createElement('a');
-                            downloadButton.href = data.download_url;
-                            downloadButton.textContent = 'Download File';
-                            downloadButton.className = 'btn-gradient'; // Style it like your other buttons
-                            
-                            // Add a close button
-                            const closeButton = document.createElement('button');
-                            closeButton.textContent = 'Close';
-                            closeButton.className = 'btn-secondary'; // Or another style
-                            closeButton.onclick = () => loadingOverlay.classList.remove('visible');
-
-                            overlayActions.appendChild(downloadButton);
-                            overlayActions.appendChild(closeButton);
-
-                        } else {
-                            // ERROR: Show the error message from the server
-                            spinner.style.display = 'none';
-                            overlayText.innerHTML = `An error occurred:<br><small>${data.error}</small>`;
-                            
-                            const closeButton = document.createElement('button');
-                            closeButton.textContent = 'Close';
-                            closeButton.className = 'btn-secondary';
-                            closeButton.onclick = () => loadingOverlay.classList.remove('visible');
-                            overlayActions.appendChild(closeButton);
-                        }
-                    })
-                    .catch(error => {
-                        // Handle network errors
-                        spinner.style.display = 'none';
-                        overlayText.textContent = 'A network error occurred. Please try again.';
-                        console.error('Fetch Error:', error);
-                    });
+                    if (fileInput.files.length === 0 && textArea.value.trim() === '') {
+                        alert("Please select a file or paste text to process.");
+                        event.preventDefault(); // Stop the form from submitting
+                        return;
+                    }
+                    
+                    loadingOverlay.classList.add('visible');
                 });
             }
         });
