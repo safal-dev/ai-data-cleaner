@@ -33,7 +33,7 @@ from .forms import UserRegisterForm
 
 from django.db.models import Sum # For dashboard aggregation
 
-from django.urls import reverse 
+
 # --- Pricing Model Constants ---
 # Per 1 Million tokens (USD)
 PRICING_MODEL = {
@@ -504,32 +504,11 @@ def process_digital_data_view(request):
                 # model_used=model_used, # Uncomment if you add 'model_used' field to TransactionRecord
             )
 
- # 1. Generate a unique, secure filename
-            unique_filename = f"processed_{uuid.uuid4()}.csv"
-            
-            # 2. Define the path to save the temporary file
-            output_dir = os.path.join(settings.MEDIA_ROOT, 'processed_files')
-            os.makedirs(output_dir, exist_ok=True)
-            output_filepath = os.path.join(output_dir, unique_filename)
+            response = HttpResponse(cleaned_csv_output, content_type='text/csv')
+            default_name = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_CleanedLeads.csv"
+            response['Content-Disposition'] = f'attachment; filename="{default_name}"'
 
-            # 3. Save the processed data to the file on the server
-            with open(output_filepath, 'w', newline='', encoding='utf-8') as f:
-                f.write(cleaned_csv_output)
-            
-            # 4. Create the download URL for the frontend
-            download_url = reverse('download_processed_file', args=[unique_filename])
-
-            # 5. Return the JSON response
-            return JsonResponse({
-                'success': True,
-                'message': 'Data processed successfully!',
-                'download_url': download_url
-            })
-            # --- END OF REPLACEMENT LOGIC ---
-
-        except Exception as e:
-            # On any crash, return a JSON error
-            return JsonResponse({'success': False, 'error': f'An unexpected error occurred: {str(e)}'}, status=500)
+            return response
 
         except RuntimeError as e:
             messages.error(request, f"AI Processing Error: {e}")
