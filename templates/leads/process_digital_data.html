@@ -4,7 +4,6 @@
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/landing_page.css' %}">
     <link rel="stylesheet" href="{% static 'css/process_data.css' %}">
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -13,7 +12,6 @@
         <a href="{% url 'index' %}" class="logo">
              <img src="{% static 'images/bizdata.shaara.app-logo.png' %}" alt="Lead Cleaner Logo">
         </a>
-
         <nav class="main-nav">
             <button class="hamburger-menu" aria-label="Toggle navigation">
                 <span class="bar"></span>
@@ -30,10 +28,9 @@
 
 <div class="process-data-wrapper">
     <div class="page-title">
-        <h1>Process Digital Data</h1> {# Specific title for digital data #}
+        <h1>Process Digital Data</h1>
     </div>
 
-    {# Display messages if any #}
     {% if messages %}
         <ul class="messages">
             {% for message in messages %}
@@ -42,73 +39,52 @@
         </ul>
     {% endif %}
 
-    <form method="post" action="{{ form_action_url }}" enctype="multipart/form-data" class="digital-data-form">
+    <form method="post" action="{% url 'process_digital_data' %}" enctype="multipart/form-data" class="digital-data-form">
         {% csrf_token %}
+        
         <div class="file-upload-area" id="dropArea">
-            <p>Drag and drop Excel/CSV/Text files here</p> {# Specific description #}
+            <p>Drag and drop Excel/CSV/Text files here</p>
             <p>Or browse Excel/CSV/Text files</p>
-            
-            {# File Input: specific accept types, HIDDEN #}
-            <input type="file"
-                    id="fileInput"
-                    name="digital_files" {# Specific name for digital files #}
-                    accept=".csv, .xls, .xlsx, .txt" {# Specific accept types #}
-                    multiple style="display: none;">
-            
-            {# The 'Browse files' button is now a LABEL linked to the fileInput #}
+            <input type="file" id="fileInput" name="digital_files" accept=".csv, .xls, .xlsx, .txt" multiple style="display: none;">
             <label for="fileInput" class="browse-files-button" id="browseFilesButton">Browse Excel/CSV/Text files</label>
-
-            {# Dynamic file display area #}
-            <div id="fileDisplayArea" class="file-display-area">
-                {# Content will be added by JavaScript #}
-            </div>
+            <div id="fileDisplayArea" class="file-display-area"></div>
         </div>
 
-            {# --- ADD THIS NEW BLOCK FOR THE TEXTAREA --- #}
         <div class="text-area-container">
-        <label for="pasted_text_area">Or Paste Your Data Here</label>
-        <p class="text-area-description">
-            Copy and paste data directly into the text area below.
-        </p>
-        <textarea id="pasted_text_area" name="pasted_text" rows="10" placeholder="e.g. John Doe, john@example.com, 555-1234..."></textarea>
+            <label for="pasted_text_area">Or Paste Your Data Here</label>
+            <p class="text-area-description">Copy and paste data directly into the text area below.</p>
+            <textarea id="pasted_text_area" name="pasted_text" rows="10" placeholder="e.g. John Doe, john@example.com, 555-1234..."></textarea>
         </div>
 
         <div class="instruction-selection-display">
-            <p>Current Instruction: <span id="selectedInstructionName">{{ default_instruction.name|default:"(None Selected - using default)" }}</span></p>
+            <p>Current Instruction: <span id="selectedInstructionName">{{ default_instruction.name|default:"(Using default)" }}</span></p>
             <input type="hidden" id="selectedInstructionId" name="selected_instruction_id" value="{{ default_instruction.pk|default:'' }}">
         </div>
 
         <div class="action-buttons-container">
             <button type="button" class="select-instruction-button" id="selectInstructionButton">Select Instruction</button>
-            <button type="submit" class="clean-data-button">Clean Digital Data</button> {# Specific button text #}
+            <button type="submit" class="clean-data-button">Clean Digital Data</button>
         </div>
     </form>
 </div>
 
-{# Instruction Selection Modal (Same as before) #}
+<!-- Instruction Selection Modal -->
 <div id="instructionModal" class="modal">
     <div class="modal-content">
-        <span class="close-button">&times;</span>
+        <span class="close-button">×</span>
         <h2>Select Instruction</h2>
         <div class="instruction-list-container">
             {% if instruction_sets %}
                 <ul class="instruction-selection-list">
                     {% for instruction in instruction_sets %}
                         <li class="instruction-item">
-                            <input type="radio"
-                                    id="instruction-{{ instruction.pk }}"
-                                    name="instruction_radio"
-                                    value="{{ instruction.pk }}"
-                                    data-instruction-name="{{ instruction.name }}"
-                                    {% if instruction.is_default %}checked{% endif %}>
-                            <label for="instruction-{{ instruction.pk }}">{{ instruction.name }}
-                                {% if instruction.is_default %}<span class="default-tag">(Default)</span>{% endif %}
-                            </label>
+                            <input type="radio" id="instruction-{{ instruction.pk }}" name="instruction_radio" value="{{ instruction.pk }}" data-instruction-name="{{ instruction.name }}" {% if instruction.is_default %}checked{% endif %}>
+                            <label for="instruction-{{ instruction.pk }}">{{ instruction.name }} {% if instruction.is_default %}<span class="default-tag">(Default)</span>{% endif %}</label>
                         </li>
                     {% endfor %}
                 </ul>
             {% else %}
-                <p>No instructions found. Please <a href="{% url 'create_instruction' %}">create one</a>.</p>
+                <p>No instructions found. Please <a href="{% url 'instruction_form' %}">create one</a>.</p>
             {% endif %}
         </div>
         <div class="modal-buttons-container">
@@ -119,20 +95,39 @@
 </div>
 {% endblock content %}
 
+
 {% block extra_js %}
-    {# This loads all the complex form logic from our new file #}
+    <!-- This script handles the drag-and-drop, modal, etc. for THIS page -->
     <script src="{% static 'js/process_digital_data_form.js' %}"></script>
 
-    {# This is the simple script for the hamburger menu #}
+    <!-- This script handles the hamburger menu and the loading overlay for THIS page -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // --- Hamburger Menu Logic ---
             const hamburgerMenu = document.querySelector('.hamburger-menu');
             const navLinks = document.querySelector('.nav-links');
-
             if (hamburgerMenu && navLinks) {
                 hamburgerMenu.addEventListener('click', () => {
                     navLinks.classList.toggle('active');
                     hamburgerMenu.classList.toggle('active');
+                });
+            }
+
+            // --- Loading Overlay Logic ---
+            const digitalForm = document.querySelector('.digital-data-form');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            if (digitalForm && loadingOverlay) {
+                digitalForm.addEventListener('submit', (event) => {
+                    const fileInput = document.getElementById('fileInput');
+                    const textArea = document.getElementById('pasted_text_area');
+                    
+                    if (fileInput.files.length === 0 && textArea.value.trim() === '') {
+                        alert("Please select a file or paste text to process.");
+                        event.preventDefault(); // Stop the form from submitting
+                        return;
+                    }
+                    
+                    loadingOverlay.classList.add('visible');
                 });
             }
         });
