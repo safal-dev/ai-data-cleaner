@@ -14,9 +14,57 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-    {% block extra_css %}
-       <link rel="stylesheet" href="{% static 'css/base.css' %}">
-    {% endblock extra_css %}
+<style>
+/* In static/css/base.css */
+
+/* ===================================== */
+/*  GLOBAL LOADING OVERLAY STYLES        */
+/* ===================================== */
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: none; /* Hidden by default */
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 9999;
+    color: #ffffff;
+    font-size: 1.2em;
+    font-weight: 500;
+}
+
+/* This class is added by JavaScript to show the overlay */
+.loading-overlay.visible {
+    display: flex;
+}
+
+.loading-overlay .spinner {
+    width: 60px;
+    height: 60px;
+    border: 5px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+.loading-overlay p {
+    margin: 0;
+    letter-spacing: 0.5px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+</style>
 
 
 </head>
