@@ -130,6 +130,12 @@
                     loadingOverlay.classList.add('visible');
                 });
             }
+            
+            window.addEventListener('beforeunload', () => {
+                if (loadingOverlay && loadingOverlay.classList.contains('visible')) {
+                    loadingOverlay.classList.remove('visible');
+                }
+            });
         });
     </script>
 {% endblock extra_js %}
