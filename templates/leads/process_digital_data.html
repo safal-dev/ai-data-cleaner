@@ -114,28 +114,38 @@
             }
 
             // --- Loading Overlay Logic ---
-            const digitalForm = document.querySelector('.digital-data-form');
-            const loadingOverlay = document.getElementById('loading-overlay');
-            if (digitalForm && loadingOverlay) {
-                digitalForm.addEventListener('submit', (event) => {
-                    const fileInput = document.getElementById('fileInput');
-                    const textArea = document.getElementById('pasted_text_area');
-                    
-                    if (fileInput.files.length === 0 && textArea.value.trim() === '') {
-                        alert("Please select a file or paste text to process.");
-                        event.preventDefault(); // Stop the form from submitting
-                        return;
-                    }
-                    
-                    loadingOverlay.classList.add('visible');
-                });
+    const digitalForm = document.querySelector('.digital-data-form');
+    const loadingOverlay = document.getElementById('loading-overlay');
+
+    if (digitalForm && loadingOverlay) {
+        digitalForm.addEventListener('submit', (event) => {
+            const fileInput = document.getElementById('fileInput');
+            const textArea = document.getElementById('pasted_text_area');
+
+            // --- Validation: Require file or pasted text ---
+            if (fileInput.files.length === 0 && textArea.value.trim() === '') {
+                alert("Please select a file or paste text to process.");
+                event.preventDefault(); // Prevent form submission
+                return;
             }
-            
-            window.addEventListener('beforeunload', () => {
-                if (loadingOverlay && loadingOverlay.classList.contains('visible')) {
-                    loadingOverlay.classList.remove('visible');
-                }
-            });
+
+            // --- Show overlay if validation passes ---
+            loadingOverlay.classList.add('visible');
+
+            // --- TRICK: Hide overlay after short delay ---
+            setTimeout(() => {
+                loadingOverlay.classList.remove('visible');
+            }, 5000); // Adjust time if needed
         });
+    }
+
+    // Hide overlay when navigating away
+    window.addEventListener('beforeunload', () => {
+        if (loadingOverlay && loadingOverlay.classList.contains('visible')) {
+            loadingOverlay.classList.remove('visible');
+        }
+    });
+});
+
     </script>
 {% endblock extra_js %}

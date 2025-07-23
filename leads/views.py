@@ -532,6 +532,7 @@ def process_digital_data_view(request):
         }
         return render(request, 'leads/process_digital_data.html', context)
 
+
 @login_required
 def process_physical_data_view(request):
     """
