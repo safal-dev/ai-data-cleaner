@@ -29,7 +29,7 @@ from .forms import UserRegisterForm
 # Note: 'render' and 'redirect' are already imported from django.shortcuts,
 # so the lines below are redundant but harmless.
 # from django.shortcuts import render, redirect 
-from django.urls import reverse # Import reverse for URL resolution
+# from django.urls import reverse # Already used, but keeping for clarity if standalone import was intended
 
 from django.db.models import Sum # For dashboard aggregation
 
@@ -308,134 +308,229 @@ def dashboard_view(request):
 # In your leads/views.py file
 
 @login_required
-
 def process_digital_data_view(request):
     """
-    Handles displaying the form (GET) and processing data in the background via AJAX (POST).
+    Handles the page for processing digital files (like Excel/CSV) and pasted text.
+    Processes data using the Gemini API, tracks token usage, and calculates cost.
+    Creates a TransactionRecord for each successful processing event.
     """
-    # This part handles the initial page load (GET request)
-    if request.method != 'POST':
-        instruction_sets = InstructionSet.objects.filter(user=request.user).order_by('name')
-        if not instruction_sets.exists():
-            messages.info(request, "Welcome! Please create your first AI instruction set to get started.")
+    instruction_sets = InstructionSet.objects.filter(user=request.user).order_by('name')
+    default_instruction = instruction_sets.filter(is_default=True).first()
+
+    # 2. THE CRITICAL CHECK: Does the user have ANY instructions at all?
+    if not instruction_sets.exists():
+        # If the user has zero instructions, send a helpful message and redirect them.
+        messages.info(request, "Welcome! Please create your first AI instruction set to get started.")
+        return redirect('manage_instructions')  # Redirect to the page where they can create one.
+
+    # 3. If they have instructions, find the default one for the form.
+    default_instruction = instruction_sets.filter(is_default=True).first()
+    if request.method == 'POST':
+        profile = request.user.profile
+        profile.check_and_reset_quota()  # Ensure user's quota is up-to-date
+
+        if profile.cleans_this_month >= profile.monthly_quota:
+            messages.error(request, f"You have reached your monthly data cleaning limit ({profile.monthly_quota}). Please contact an administrator for an increase.")
+            return redirect('dashboard')
+
+        pasted_text = request.POST.get('pasted_text', '')
+        uploaded_files = request.FILES.getlist('digital_files')
+
+        selected_instruction_id = request.POST.get('selected_instruction_id')
+        selected_instruction = None
+        if selected_instruction_id:
+            try:
+                selected_instruction = get_object_or_404(InstructionSet, pk=selected_instruction_id, user=request.user)
+            except Exception:
+                messages.warning(request, "Selected instruction not found or does not belong to you. Attempting to use default.")
+
+        if not selected_instruction:
+            selected_instruction = InstructionSet.objects.filter(user=request.user, is_default=True).first()
+
+        if not selected_instruction:
+            messages.error(request, "No AI instructions found. Please create one or set a default in 'Manage AI Instructions'.")
             return redirect('manage_instructions')
-        
-        default_instruction = instruction_sets.filter(is_default=True).first()
+
+        user_instructions = selected_instruction.instructions.strip()
+
+        if not pasted_text and not uploaded_files:
+            messages.error(request, "Please upload at least one file or paste some text data.")
+            context = {
+                'instruction_sets': instruction_sets,
+                'default_instruction': selected_instruction
+            }
+            return render(request, 'leads/process_digital_data.html', context)
+
+        combined_data = []
+
+        for uploaded_file in uploaded_files:
+            try:
+                _, file_extension = os.path.splitext(uploaded_file.name)
+                file_extension = file_extension.lower().lstrip('.')
+
+                if file_extension == 'csv':
+                    best_df = pd.DataFrame()
+                    raw_file_content_bytes = uploaded_file.read()
+
+                    detected_encoding = None
+                    try:
+                        result = chardet.detect(raw_file_content_bytes)
+                        detected_encoding = result['encoding']
+                        if detected_encoding:
+                            detected_encoding = detected_encoding.lower()
+                            if detected_encoding == 'ascii':
+                                detected_encoding = 'utf-8'
+                    except Exception as e:
+                        print(f"DEBUG: chardet failed for '{uploaded_file.name}': {e}")
+                        detected_encoding = None
+
+                    encodings_to_try = []
+                    if detected_encoding: encodings_to_try.append(detected_encoding)
+                    if 'utf-8' not in encodings_to_try: encodings_to_try.append('utf-8')
+                    if 'utf-16' not in encodings_to_try: encodings_to_try.append('utf-16')
+                    if 'latin1' not in encodings_to_try: encodings_to_try.append('latin1')
+                    if 'cp1252' not in encodings_to_try: encodings_to_try.append('cp1252')
+
+                    delimiters_to_try = [',', ';', '\t', '|']
+                    max_columns_found = 0
+
+                    for encoding_attempt in encodings_to_try:
+                        for delimiter_attempt in delimiters_to_try:
+                            try:
+                                decoded_csv_data = raw_file_content_bytes.decode(encoding_attempt)
+                                temp_df = pd.read_csv(
+                                    io.StringIO(decoded_csv_data),
+                                    sep=delimiter_attempt,
+                                    on_bad_lines='skip',
+                                    header=0
+                                )
+
+                                if not temp_df.empty and temp_df.shape[1] > max_columns_found:
+                                    best_df = temp_df
+                                    max_columns_found = temp_df.shape[1]
+                                    if max_columns_found > 1:
+                                        break
+                            except (UnicodeDecodeError, pd.errors.ParserError, pd.errors.EmptyDataError):
+                                continue
+                            except Exception as e:
+                                print(f"DEBUG: Error trying encoding '{encoding_attempt}' and delimiter '{delimiter_attempt}' for '{uploaded_file.name}': {e}")
+                                continue
+                        if max_columns_found > 1:
+                            break
+
+                    if best_df.empty or max_columns_found <= 1:
+                        messages.error(request, f"Failed to parse CSV columns from '{uploaded_file.name}' after trying multiple encodings and delimiters. Please check the file's actual format and contents.")
+                        continue
+                    else:
+                        df = best_df
+
+                elif file_extension in ['xls', 'xlsx']:
+                    df = pd.read_excel(uploaded_file)
+                elif file_extension == 'txt':
+                    try:
+                        text_content = uploaded_file.read().decode('utf-8')
+                        df = pd.DataFrame([{'raw_input_data': text_content, '_source_file': uploaded_file.name}])
+                    except Exception as e:
+                        messages.error(request, f"Failed to read text file '{uploaded_file.name}': {e}")
+                        continue
+                else:
+                    messages.warning(request, f"Skipping unsupported file type: {uploaded_file.name}")
+                    continue
+
+                if not df.empty:
+                    if file_extension not in ['txt']:
+                        df['_source_file'] = uploaded_file.name
+                    combined_data.append(df)
+                else:
+                    messages.warning(request, f"File '{uploaded_file.name}' was empty or could not be read after parsing.")
+            except Exception as e:
+                messages.error(request, f"Failed to process '{uploaded_file.name}': {e}")
+                continue
+
+        if pasted_text:
+            pasted_df = pd.DataFrame([{'raw_input_data': pasted_text, '_source_file': 'Pasted_Data'}])
+            combined_data.append(pasted_df)
+
+        if not combined_data:
+            messages.error(request, "No valid data found after processing files and text.")
+            context = {
+                'instruction_sets': instruction_sets,
+                'default_instruction': selected_instruction
+            }
+            return render(request, 'leads/process_digital_data.html', context)
+
+        combined_input_df = pd.concat(combined_data, ignore_index=True)
+        combined_input_df = combined_input_df.fillna('')
+
+        gemini_prompt = format_gemini_prompt(combined_input_df, user_instructions)
+
+        try:
+            cleaned_csv_output_tuple = call_gemini_api(gemini_prompt)
+
+            cleaned_csv_output = cleaned_csv_output_tuple[0]
+            input_tokens = cleaned_csv_output_tuple[1]
+            output_tokens = cleaned_csv_output_tuple[2]
+
+            model_used = 'gemini-2.0-flash'
+
+            if not cleaned_csv_output.strip():
+                messages.warning(request, "Gemini returned an empty response. Please check your instructions and input data.")
+                context = {
+                    'instruction_sets': instruction_sets,
+                    'default_instruction': selected_instruction
+                }
+                return render(request, 'leads/process_digital_data.html', context)
+            
+
+            # --- Calculate cost and update user's profile totals ---
+            cost = calculate_gemini_cost(model_used, input_tokens, output_tokens)
+
+            if not isinstance(cost, Decimal):
+                cost = Decimal(str(cost))
+
+            profile.total_input_tokens += input_tokens
+            profile.total_output_tokens += output_tokens
+            profile.total_cost_usd += cost
+            profile.cleans_this_month += 1
+            profile.save()
+
+            # --- Create a TransactionRecord for this usage event ---
+            TransactionRecord.objects.create(
+                user=request.user,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                cost_usd=cost,
+                transaction_type='digital',
+                # model_used=model_used, # Uncomment if you add 'model_used' field to TransactionRecord
+            )
+
+            response = HttpResponse(cleaned_csv_output, content_type='text/csv')
+            default_name = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_CleanedLeads.csv"
+            response['Content-Disposition'] = f'attachment; filename="{default_name}"'
+
+            return response
+
+        except RuntimeError as e:
+            messages.error(request, f"AI Processing Error: {e}")
+            context = {
+                'instruction_sets': instruction_sets,
+                'default_instruction': selected_instruction
+            }
+            return render(request, 'leads/process_digital_data.html', context)
+        except Exception as e:
+            messages.error(request, f"An unexpected error occurred during data processing: {e}")
+            context = {
+                'instruction_sets': instruction_sets,
+                'default_instruction': selected_instruction
+            }
+            return render(request, 'leads/process_digital_data.html', context)
+
+    else:
         context = {
             'instruction_sets': instruction_sets,
             'default_instruction': default_instruction
         }
         return render(request, 'leads/process_digital_data.html', context)
-
-    # --- This part handles the background AJAX POST request ---
-    
-    # Get profile and check quota
-    profile = request.user.profile
-    profile.check_and_reset_quota()
-    if profile.cleans_this_month >= profile.monthly_quota:
-        return JsonResponse({'success': False, 'error': f"You have reached your monthly data cleaning limit ({profile.monthly_quota})."}, status=403)
-
-    # Get instruction set from form
-    instruction_sets = InstructionSet.objects.filter(user=request.user)
-    selected_instruction_id = request.POST.get('selected_instruction_id')
-    selected_instruction = instruction_sets.filter(pk=selected_instruction_id).first()
-    if not selected_instruction:
-        selected_instruction = instruction_sets.filter(is_default=True).first() or instruction_sets.first()
-    if not selected_instruction:
-        return JsonResponse({'success': False, 'error': 'No AI instruction set found.'}, status=400)
-    user_instructions = selected_instruction.instructions.strip()
-
-    # --- Your excellent data gathering and parsing logic ---
-    pasted_text = request.POST.get('pasted_text', '')
-    uploaded_files = request.FILES.getlist('digital_files')
-    if not pasted_text and not uploaded_files:
-        return JsonResponse({'success': False, 'error': 'No file or text data was provided.'}, status=400)
-
-    combined_data = []
-    # (Your full, detailed for loop for parsing files goes here, unchanged)
-    for uploaded_file in uploaded_files:
-        try:
-            _, file_extension = os.path.splitext(uploaded_file.name)
-            file_extension = file_extension.lower().lstrip('.')
-            df = None
-            if file_extension == 'csv':
-                # ... your full robust csv parsing logic ...
-                df = pd.read_csv(uploaded_file) # Placeholder for your logic
-            elif file_extension in ['xls', 'xlsx']:
-                df = pd.read_excel(uploaded_file)
-            elif file_extension == 'txt':
-                text_content = uploaded_file.read().decode('utf-8')
-                df = pd.DataFrame([{'raw_input_data': text_content}])
-            else:
-                continue # Skip unsupported files
-
-            if df is not None and not df.empty:
-                df['_source_file'] = uploaded_file.name
-                combined_data.append(df)
-        except Exception as e:
-            # In an AJAX view, we return a JSON error instead of using messages
-            return JsonResponse({'success': False, 'error': f"Failed to process file '{uploaded_file.name}': {str(e)}"}, status=400)
-
-    if pasted_text:
-        # (Your logic for handling pasted text)
-        pasted_df = pd.DataFrame([{'raw_input_data': pasted_text, '_source_file': 'Pasted_Data'}])
-        combined_data.append(pasted_df)
-
-    if not combined_data:
-        return JsonResponse({'success': False, 'error': 'No valid data could be read from your input.'}, status=400)
-
-    combined_input_df = pd.concat(combined_data, ignore_index=True).fillna('')
-    gemini_prompt = format_gemini_prompt(combined_input_df, user_instructions)
-    # --- End of data parsing logic ---
-
-    try:
-        # --- AI Call and Response Handling ---
-        # Ensure call_gemini_api returns (text, in_tokens, out_tokens) or (None, 0, 0)
-        cleaned_csv_output, input_tokens, output_tokens = call_gemini_api(gemini_prompt)
-
-        if cleaned_csv_output is None or not cleaned_csv_output.strip():
-            return JsonResponse({'success': False, 'error': 'AI processing failed or returned an empty response.'}, status=500)
-
-        # --- NEW LOGIC: Save file and generate download URL ---
-        unique_filename = f"processed_{uuid.uuid4()}.csv"
-        output_dir = os.path.join(settings.MEDIA_ROOT, 'processed_files')
-        os.makedirs(output_dir, exist_ok=True)
-        output_filepath = os.path.join(output_dir, unique_filename)
-
-        with open(output_filepath, 'w', newline='', encoding='utf-8') as f:
-            f.write(cleaned_csv_output)
-        
-        download_url = reverse('download_processed_file', args=[unique_filename])
-
-        # --- Cost calculation and profile updates ---
-        model_used = 'gemini-1.5-flash'
-        cost = calculate_gemini_cost(request.user, model_used, input_tokens, output_tokens)
-
-        profile.total_input_tokens += input_tokens
-        profile.total_output_tokens += output_tokens
-        profile.total_cost_usd += cost
-        profile.cleans_this_month += 1
-        profile.save()
-
-        TransactionRecord.objects.create(
-            user=request.user,
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
-            cost_usd=cost,
-            transaction_type='digital',
-        )
-
-        # --- Return the final JSON response to the frontend ---
-        return JsonResponse({
-            'success': True,
-            'message': 'Data processed successfully!',
-            'download_url': download_url
-        })
-
-    except Exception as e:
-        # On any unexpected crash during the AI/saving phase, return a JSON error
-        return JsonResponse({'success': False, 'error': f'An unexpected error occurred: {str(e)}'}, status=500)
-
 
 @login_required
 def process_physical_data_view(request):
