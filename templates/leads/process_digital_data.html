@@ -114,38 +114,24 @@
             }
 
             // --- Loading Overlay Logic ---
-    const digitalForm = document.querySelector('.digital-data-form');
-    const loadingOverlay = document.getElementById('loading-overlay');
+            const dataForm = document.querySelector('.digital-data-form');
+            const loadingOverlay = document.getElementById('loading-overlay');
 
-    if (digitalForm && loadingOverlay) {
-        digitalForm.addEventListener('submit', (event) => {
-            const fileInput = document.getElementById('fileInput');
-            const textArea = document.getElementById('pasted_text_area');
-
-            // --- Validation: Require file or pasted text ---
-            if (fileInput.files.length === 0 && textArea.value.trim() === '') {
-                alert("Please select a file or paste text to process.");
-                event.preventDefault(); // Prevent form submission
-                return;
+            if (dataForm && loadingOverlay) {
+                // 1. Show the overlay when the form is submitted
+                dataForm.addEventListener('submit', (event) => {
+                    // (You can add your validation logic here if you want)
+                    loadingOverlay.classList.add('visible');
+                    
+                    // 2. THE TRICK: Use a short timeout to hide the overlay.
+                    //    This gives the browser enough time to receive the file
+                    //    download header from the server. The download will start,
+                    //    and the overlay will hide.
+                    setTimeout(() => {
+                        loadingOverlay.classList.remove('visible');
+                    }, 5000); // Hide after 5 seconds
+                });
             }
-
-            // --- Show overlay if validation passes ---
-            loadingOverlay.classList.add('visible');
-
-            // --- TRICK: Hide overlay after short delay ---
-            setTimeout(() => {
-                loadingOverlay.classList.remove('visible');
-            }, 5000); // Adjust time if needed
         });
-    }
-
-    // Hide overlay when navigating away
-    window.addEventListener('beforeunload', () => {
-        if (loadingOverlay && loadingOverlay.classList.contains('visible')) {
-            loadingOverlay.classList.remove('visible');
-        }
-    });
-});
-
     </script>
 {% endblock extra_js %}
