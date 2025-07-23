@@ -115,23 +115,62 @@
 
             // --- Loading Overlay Logic ---
             const dataForm = document.querySelector('.digital-data-form');
-            const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const overlayText = document.getElementById('overlay-text');
+        const overlayActions = document.getElementById('overlay-actions');
+        const spinner = loadingOverlay.querySelector('.spinner');
 
-            if (dataForm && loadingOverlay) {
-                // 1. Show the overlay when the form is submitted
-                dataForm.addEventListener('submit', (event) => {
-                    // (You can add your validation logic here if you want)
-                    loadingOverlay.classList.add('visible');
+        if (dataForm && loadingOverlay) {
+            dataForm.addEventListener('submit', (event) => {
+                // 1. Stop the page from reloading
+                event.preventDefault();
+                
+                // (Your validation logic to check for files/text)
+                // ...
+
+                // 2. Show the "Processing..." popup
+                overlayText.textContent = 'Processing your data, please wait...';
+                spinner.style.display = 'block';
+                overlayActions.innerHTML = ''; // Clear old buttons
+                loadingOverlay.classList.add('visible');
+
+                // 3. Send form data in the background with Fetch API
+                const formData = new FormData(dataForm);
+                
+                fetch("{% url 'process_digital_data' %}", {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-CSRFToken': formData.get('csrfmiddlewaretoken') }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // 4. This runs AFTER the server has finished
+                    spinner.style.display = 'none'; // Hide the spinner
                     
-                    // 2. THE TRICK: Use a short timeout to hide the overlay.
-                    //    This gives the browser enough time to receive the file
-                    //    download header from the server. The download will start,
-                    //    and the overlay will hide.
-                    setTimeout(() => {
-                        loadingOverlay.classList.remove('visible');
-                    }, 5000); // Hide after 5 seconds
+                    if (data.success) {
+                        // SUCCESS: Update the popup with a download button
+                        overlayText.textContent = 'Processing Complete!';
+                        
+                        const downloadButton = `<a href="${data.download_url}" class="btn-gradient">Download File</a>`;
+                        const closeButton = `<button type="button" class="btn-secondary" onclick="document.getElementById('loading-overlay').classList.remove('visible');">Close</button>`;
+                        
+                        overlayActions.innerHTML = downloadButton + closeButton;
+                    } else {
+                        // ERROR: Show the server's error message
+                        overlayText.innerHTML = `An error occurred:<br><small>${data.error}</small>`;
+                        
+                        const closeButton = `<button type="button" class="btn-secondary" onclick="document.getElementById('loading-overlay').classList.remove('visible');">Close</button>`;
+                        overlayActions.innerHTML = closeButton;
+                    }
+                })
+                .catch(error => {
+                    // Handle network-level errors
+                    spinner.style.display = 'none';
+                    overlayText.textContent = 'A network error occurred. Please try again.';
+                    console.error('Fetch Error:', error);
                 });
-            }
-        });
+            });
+        }
+    });
     </script>
 {% endblock extra_js %}

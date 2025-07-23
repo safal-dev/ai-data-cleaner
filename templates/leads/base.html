@@ -26,11 +26,14 @@
     <!--  GLOBAL LOADING OVERLAY HTML          -->
     <!-- ===================================== -->
     <!-- THE FIX: Add class="loading-overlay" -->
-    <div id="loading-overlay" class="loading-overlay">
+ <div id="loading-overlay" class="loading-overlay">
+    <div class="overlay-content">
         <div class="spinner"></div>
-        <p>Processing your data, please wait...</p>
-        
+        <p id="overlay-text">Processing your data, please wait...</p>
+        <!-- This div is where we will add the download/close buttons -->
+        <div id="overlay-actions"></div>
     </div>
+</div>
     <!-- ===================================== -->
 
     <div id="popup-message-container" class="popup-message-container"></div>

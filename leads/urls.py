@@ -26,4 +26,5 @@ urlpatterns = [
     path('edit_instruction/<int:pk>/', views.edit_instruction, name='edit_instruction'),
     path('delete_instruction/<int:pk>/', views.delete_instruction, name='delete_instruction'),
     path('set_default_instruction/<int:pk>/', views.set_default_instruction, name='set_default_instruction'),
+    path('download/<str:filename>/', views.download_processed_file, name='download_processed_file'),
 ]
