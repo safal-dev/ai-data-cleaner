@@ -96,19 +96,3 @@
     background-color: #5a5a5a;
 }
 
-/* In static/css/base.css */
-.loading-overlay .overlay-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-}
-
-#overlay-actions {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-top: 25px;
-}
-
-/* You can use your existing button styles like .btn-gradient */

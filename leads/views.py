@@ -30,7 +30,7 @@ from .forms import UserRegisterForm
 # Note: 'render' and 'redirect' are already imported from django.shortcuts,
 # so the lines below are redundant but harmless.
 # from django.shortcuts import render, redirect 
-from django.urls import reverse # Import reverse for URL resolution
+# from django.urls import reverse # Already used, but keeping for clarity if standalone import was intended
 
 from django.db.models import Sum # For dashboard aggregation
 
@@ -526,32 +526,33 @@ def process_digital_data_view(request):
                 # model_used=model_used, # Uncomment if you add 'model_used' field to TransactionRecord
             )
 
-            unique_filename = f"processed_{uuid.uuid4()}.csv"
-            
-            # 2. Define where to save the temporary file (in your media folder)
-            output_dir = os.path.join(settings.MEDIA_ROOT, 'processed_files')
-            os.makedirs(output_dir, exist_ok=True) # Create the directory if it doesn't exist
-            output_filepath = os.path.join(output_dir, unique_filename)
+            response = HttpResponse(cleaned_csv_output, content_type='text/csv')
+            default_name = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_CleanedLeads.csv"
+            response['Content-Disposition'] = f'attachment; filename="{default_name}"'
 
-            # 3. Save the processed data to this file on the server
-            with open(output_filepath, 'w', newline='', encoding='utf-8') as f:
-                f.write(cleaned_csv_output)
-            
-            # 4. Create the download URL using the new view we just made
-            download_url = reverse('download_processed_file', args=[unique_filename])
+            return response
 
-            # 5. Return a JSON response to the frontend
-            return JsonResponse({
-                'success': True,
-                'message': 'Data processed successfully!',
-                'download_url': download_url
-            })
-
-            # --- END OF NEW LOGIC ---
-
+        except RuntimeError as e:
+            messages.error(request, f"AI Processing Error: {e}")
+            context = {
+                'instruction_sets': instruction_sets,
+                'default_instruction': selected_instruction
+            }
+            return render(request, 'leads/process_digital_data.html', context)
         except Exception as e:
-            # On any crash, return a JSON error
-            return JsonResponse({'success': False, 'error': f'An unexpected error occurred: {str(e)}'}, status=500)
+            messages.error(request, f"An unexpected error occurred during data processing: {e}")
+            context = {
+                'instruction_sets': instruction_sets,
+                'default_instruction': selected_instruction
+            }
+            return render(request, 'leads/process_digital_data.html', context)
+
+    else:
+        context = {
+            'instruction_sets': instruction_sets,
+            'default_instruction': default_instruction
+        }
+        return render(request, 'leads/process_digital_data.html', context)
 
 
 @login_required
