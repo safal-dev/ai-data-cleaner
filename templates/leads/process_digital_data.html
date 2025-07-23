@@ -101,10 +101,6 @@
     <script src="{% static 'js/process_digital_data_form.js' %}"></script>
 
     <!-- This script handles the hamburger menu and the loading overlay for THIS page -->
-
-<script src="{% static 'js/process_digital_data_form.js' %}"></script>
-
-    <!-- This script handles the hamburger menu and the AJAX submission -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- Hamburger Menu Logic ---
@@ -117,65 +113,29 @@
                 });
             }
 
-            // --- Digital Form AJAX Submission + Loading Overlay Logic ---
+            // --- Loading Overlay Logic ---
             const digitalForm = document.querySelector('.digital-data-form');
             const loadingOverlay = document.getElementById('loading-overlay');
-            const overlayText = document.getElementById('overlay-text'); // Make sure your overlay HTML has a <p id="overlay-text">
-            const spinner = loadingOverlay?.querySelector('.spinner');
-
-            if (digitalForm && loadingOverlay && overlayText && spinner) {
+            if (digitalForm && loadingOverlay) {
                 digitalForm.addEventListener('submit', (event) => {
-                    event.preventDefault(); // Stop the page from reloading
-
-                    // Validation...
                     const fileInput = document.getElementById('fileInput');
                     const textArea = document.getElementById('pasted_text_area');
+                    
                     if (fileInput.files.length === 0 && textArea.value.trim() === '') {
                         alert("Please select a file or paste text to process.");
+                        event.preventDefault(); // Stop the form from submitting
                         return;
                     }
-
-                    // Show the "Processing..." popup
-                    overlayText.textContent = 'Processing your data, please wait...';
-                    spinner.style.display = 'block';
-                    document.getElementById('overlay-actions').innerHTML = ''; // Clear previous buttons
-                    loadingOverlay.classList.add('visible');
-
-                    // Submit the form data in the background
-                    const formData = new FormData(digitalForm);
                     
-                    // The {% url %} tag works here because this is an HTML template
-                    fetch("{% url 'process_digital_data' %}", {
-                        method: 'POST',
-                        body: formData,
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        // This runs AFTER the server is done processing
-                        spinner.style.display = 'none'; // Hide the spinner
-                        
-                        if (data.success) {
-                            // On success, show the download button
-                            overlayText.textContent = 'Processing Complete!';
-                            const downloadButton = `<a href="${data.download_url}" class="btn btn-overlay-primary">Download File</a>`;
-                            const closeButton = `<button type="button" class="btn btn-overlay-secondary" onclick="document.getElementById('loading-overlay').classList.remove('visible');">Close</button>`;
-                            document.getElementById('overlay-actions').innerHTML = downloadButton + closeButton;
-                        } else {
-                            // On error, show the error message
-                            overlayText.textContent = `Error: ${data.error}`;
-                            const closeButton = `<button type="button" class="btn btn-overlay-secondary" onclick="document.getElementById('loading-overlay').classList.remove('visible');">Close</button>`;
-                             document.getElementById('overlay-actions').innerHTML = closeButton;
-                        }
-                    })
-                    .catch(error => {
-                        // Handle network errors
-                        spinner.style.display = 'none';
-                        overlayText.textContent = 'A network error occurred. Please try again.';
-                        console.error('AJAX Error:', error);
-                    });
+                    loadingOverlay.classList.add('visible');
                 });
             }
+            
+            window.addEventListener('beforeunload', () => {
+                if (loadingOverlay && loadingOverlay.classList.contains('visible')) {
+                    loadingOverlay.classList.remove('visible');
+                }
+            });
         });
     </script>
-
 {% endblock extra_js %}
