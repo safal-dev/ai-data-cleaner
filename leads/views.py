@@ -569,79 +569,106 @@ def process_digital_data_view(request):
 @login_required
 def process_physical_data_view(request):
     """
-    Handles displaying the form (GET) and processing images in the background via AJAX (POST).
+    Handles the page for processing physical documents (like images).
+    Processes data using the Gemini Vision API, tracks token usage, and calculates cost.
+    Creates a TransactionRecord for each successful processing event.
     """
-    # Get all instruction sets for the user.
+    # This initial setup is the same
     instruction_sets = InstructionSet.objects.filter(user=request.user).order_by('name')
+    default_instruction = instruction_sets.filter(is_default=True).first()
+    context = {
+        'instruction_sets': instruction_sets,
+        'default_instruction': default_instruction
+    }
 
-    # Check if the user has any instructions and redirect if they don't.
+        # 2. THE CRITICAL CHECK: Does the user have ANY instructions at all?
     if not instruction_sets.exists():
+        # If the user has zero instructions, send a helpful message and redirect them.
         messages.info(request, "Welcome! Please create your first AI instruction set to get started.")
-        return redirect('manage_instructions')
+        return redirect('manage_instructions') # Redirect to the page where they can create one.
 
-    # Find the default instruction.
+    # 3. If they have instructions, find the default one for the form.
     default_instruction = instruction_sets.filter(is_default=True).first()
 
-    # --- This part handles the initial page load (GET request) ---
     if request.method != 'POST':
-        context = {
-            'instruction_sets': instruction_sets,
-            'default_instruction': default_instruction,
-            'form_action_url': reverse('process_physical_data') # Pass the URL to the template
-        }
+        # If it's a GET request, just show the upload page
         return render(request, 'leads/process_physical_data.html', context)
 
-    # --- This part handles the background AJAX POST request ---
+    # --- Start of POST request logic ---
     
-    # Get profile and check quota
+    # 1. Check User Quota
     profile = request.user.profile
     profile.check_and_reset_quota()
     if profile.cleans_this_month >= profile.monthly_quota:
-        return JsonResponse({'success': False, 'error': f"You have reached your monthly limit ({profile.monthly_quota})."}, status=403)
-    
-    # Get instruction set from form
+        messages.error(request, f"You have reached your monthly data cleaning limit ({profile.monthly_quota}). Please contact an administrator for an increase.")
+        return redirect('dashboard')
+
+    # 2. Get Instructions
     selected_instruction_id = request.POST.get('selected_instruction_id')
-    selected_instruction = instruction_sets.filter(pk=selected_instruction_id).first()
+    selected_instruction = None
+    if selected_instruction_id:
+        selected_instruction = instruction_sets.filter(pk=selected_instruction_id).first()
+    
     if not selected_instruction:
-        selected_instruction = default_instruction or instruction_sets.first()
+        selected_instruction = default_instruction
+
     if not selected_instruction:
-        return JsonResponse({'success': False, 'error': 'No AI instruction set found.'}, status=400)
+        messages.error(request, "No AI instructions found. Please create one or set a default in 'Manage AI Instructions'.")
+        return redirect('manage_instructions')
+
     user_instructions = selected_instruction.instructions
 
-    # Process uploaded images
+    # 3. Process Uploaded Images
     uploaded_images = request.FILES.getlist('physical_images')
     if not uploaded_images:
-        return JsonResponse({'success': False, 'error': 'Please upload at least one image file.'}, status=400)
-    
+        messages.error(request, "Please upload at least one image file.")
+        return render(request, 'leads/process_physical_data.html', context)
+
     image_parts = []
     supported_image_types = ['image/jpeg', 'image/png', 'image/webp']
     for uploaded_image in uploaded_images:
         mime_type, _ = mimetypes.guess_type(uploaded_image.name)
         if mime_type not in supported_image_types:
+            messages.warning(request, f"Skipping unsupported image type: {uploaded_image.name}.")
             continue
         image_parts.append({"mime_type": mime_type, "data": uploaded_image.read()})
 
     if not image_parts:
-        return JsonResponse({'success': False, 'error': 'No valid image files were provided.'}, status=400)
+        messages.error(request, "No valid image files were provided for processing.")
+        return render(request, 'leads/process_physical_data.html', context)
 
+    # 4. Call AI and Handle Success/Failure
     try:
-        # --- AI Call and Response Handling ---
-        # Ensure call_gemini_vision_api returns (text, in_tokens, out_tokens) or (None, 0, 0)
+        # This function should be designed to return a tuple like:
+        # (text_output, input_tokens, output_tokens) on success
+        # (None, 0, 0) on failure, with the error logged internally
         extracted_data_raw_output, input_tokens, output_tokens = call_gemini_vision_api(image_parts, user_instructions)
 
-        if extracted_data_raw_output is None or not extracted_data_raw_output.strip():
-            return JsonResponse({'success': False, 'error': 'AI processing failed or returned an empty response.'}, status=500)
+        # --- THIS IS THE CRITICAL CHECK ---
+        # If the function failed, the text output will be None (or you can check tokens)
+        if extracted_data_raw_output is None:
+            messages.error(request, "The AI processing failed. This could be due to a network issue, an invalid API key, or an issue with the content sent. Please try again.")
+            return render(request, 'leads/process_physical_data.html', context)
 
-        # --- Cost calculation and profile updates ---
-        model_used = 'gemini-1.5-flash'
-        cost = calculate_gemini_cost(request.user, model_used, input_tokens, output_tokens)
+        # If the AI returned an empty string, it's a warning, not a crash
+        if not extracted_data_raw_output.strip():
+            messages.warning(request, "AI returned an empty response. Please check your instructions and image content.")
+            return render(request, 'leads/process_physical_data.html', context)
         
+        # --- IF WE REACH HERE, THE AI CALL WAS SUCCESSFUL ---
+        
+        # 5. Calculate Cost and Update Profile
+        model_used = 'gemini-1.5-flash' # The model used for vision
+        cost = calculate_gemini_cost(model_used, input_tokens, output_tokens)
+        cost = Decimal(str(cost)) # Ensure it's a Decimal
+
         profile.total_input_tokens += input_tokens
         profile.total_output_tokens += output_tokens
         profile.total_cost_usd += cost
         profile.cleans_this_month += 1
         profile.save()
 
+        # 6. Create Transaction Record
         TransactionRecord.objects.create(
             user=request.user,
             input_tokens=input_tokens,
@@ -650,39 +677,27 @@ def process_physical_data_view(request):
             transaction_type='physical',
         )
 
-        # --- NEW LOGIC: Save the result as an Excel file ---
-        
-        # 1. Parse the CSV output from the AI into a DataFrame and create an Excel file in memory
+        # 7. Create and Return Excel File
         df = pd.read_csv(io.StringIO(extracted_data_raw_output), sep=',')
         excel_buffer = io.BytesIO()
         with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
             df.to_excel(writer, index=False, sheet_name='ExtractedData')
-        
-        # 2. Generate a unique filename for the Excel file
-        unique_filename = f"processed_{uuid.uuid4()}.xlsx"
-        output_dir = os.path.join(settings.MEDIA_ROOT, 'processed_files')
-        os.makedirs(output_dir, exist_ok=True)
-        output_filepath = os.path.join(output_dir, unique_filename)
+        excel_buffer.seek(0)
 
-        # 3. Save the in-memory Excel file to the server
-        with open(output_filepath, 'wb') as f:
-            f.write(excel_buffer.getvalue())
-        
-        # 4. Create the download URL
-        download_url = reverse('download_processed_file', args=[unique_filename])
+        response = HttpResponse(excel_buffer.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        default_name = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_ExtractedImageData.xlsx"
+        response['Content-Disposition'] = f'attachment; filename="{default_name}"'
+        return response
 
-        # 5. Return the final JSON response
-        return JsonResponse({
-            'success': True,
-            'message': 'Image data processed successfully!',
-            'download_url': download_url
-        })
-        
     except pd.errors.ParserError as e:
-        return JsonResponse({'success': False, 'error': f"AI returned data in an unreadable format. Error: {str(e)}"}, status=400)
+        # Handle the case where the AI returns text that isn't valid CSV
+        messages.error(request, f"AI returned data in an unreadable format. Please refine your instructions to be more specific about CSV output. Error: {str(e)}")
+        return render(request, 'leads/process_physical_data.html', context)
     except Exception as e:
-        return JsonResponse({'success': False, 'error': f'An unexpected error occurred: {str(e)}'}, status=500)
-    
+        # This is a catch-all for any other unexpected errors
+        messages.error(request, f"An unexpected critical error occurred: {str(e)}")
+        return render(request, 'leads/process_physical_data.html', context)
+
 # --- Instruction Set Management Views ---
 @login_required
 def manage_instructions(request):
