@@ -5,26 +5,42 @@
 /*  GLOBAL LOADING OVERLAY STYLES        */
 /* ===================================== */
 
+/* In static/css/base.css */
+
+/* --- CORRECTED LOADING OVERLAY STYLES --- */
+
 .loading-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.75);
+    background-color: rgba(0, 0, 0, 0.8); /* Slightly darker for more focus */
     display: none; /* Hidden by default */
+    z-index: 9999;
+    
+    /* THE FIX: The outer overlay only needs to center its single child, the content box. */
+    display: none;
     justify-content: center;
     align-items: center;
+}
+
+.loading-overlay.visible {
+    display: flex; /* Show the overlay */
+}
+
+/* This is the new container for the actual content */
+.loading-overlay .overlay-content {
+    /* THE FIX: This is where the column layout and alignment should be. */
+    display: flex;
     flex-direction: column;
-    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+    
     color: #ffffff;
     font-size: 1.2em;
     font-weight: 500;
-}
-
-/* This class is added by JavaScript to show the overlay */
-.loading-overlay.visible {
-    display: flex;
+    text-align: center; /* Ensure text is centered */
 }
 
 .loading-overlay .spinner {
@@ -37,9 +53,10 @@
     margin-bottom: 20px;
 }
 
-.loading-overlay p {
+.loading-overlay p#overlay-text { /* Be more specific for the text */
     margin: 0;
     letter-spacing: 0.5px;
+    min-height: 50px; /* Give it some space so the layout doesn't jump */
 }
 
 @keyframes spin {
