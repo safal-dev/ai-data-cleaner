@@ -96,3 +96,44 @@
     background-color: #5a5a5a;
 }
 
+/* In static/css/base.css or your main stylesheet */
+
+/* --- ADD THESE NEW STYLES FOR CONSISTENT BUTTONS --- */
+
+/* This is a base class for all buttons to share styles */
+/* You can apply this to your .btn-gradient as well */
+.btn {
+    padding: 12px 30px;
+    border-radius: 25px;
+    border: none;
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    text-align: center;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Your existing gradient style for primary actions */
+.btn-gradient {
+    background: linear-gradient(135deg, #6a82fb, #fc5c7d);
+    color: white;
+}
+
+/* NEW: Secondary button style for actions like "Cancel" or "Close" */
+.btn-secondary {
+    background-color: #4a4a4a; /* A dark grey that fits your theme */
+    color: #cccccc; /* A light grey text */
+    border: 1px solid #555; /* A subtle border */
+}
+
+.btn-secondary:hover {
+    background-color: #5a5a5a;
+    border-color: #666;
+}
