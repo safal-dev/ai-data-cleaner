@@ -143,15 +143,25 @@
     color: white;
 }
 
-/* NEW: Secondary button style for actions like "Cancel" or "Close" */
 .btn-secondary {
-    background-color: #4a4a4a; /* A dark grey that fits your theme */
-    color: #cccccc; /* A light grey text */
-    border: 1px solid #555;
-    padding: 5px 10px; /* A subtle border */
+    background-color: #ffe5e5;     /* Soft red background */
+    color: #b30000;                /* Dark red text */
+    border: 1px solid #ffcccc;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
 }
 
 .btn-secondary:hover {
-    background-color: #5a5a5a;
-    border-color: #666;
+    background-color: #ffcccc;
+    border-color: #ff9999;
+    color: #800000;
+}
+
+.btn-secondary:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 100, 100, 0.4);
 }
