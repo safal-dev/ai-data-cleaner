@@ -102,36 +102,96 @@
 
     <!-- This script handles the hamburger menu and the loading overlay for THIS page -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- Hamburger Menu Logic ---
-            const hamburgerMenu = document.querySelector('.hamburger-menu');
-            const navLinks = document.querySelector('.nav-links');
-            if (hamburgerMenu && navLinks) {
-                hamburgerMenu.addEventListener('click', () => {
-                    navLinks.classList.toggle('active');
-                    hamburgerMenu.classList.toggle('active');
-                });
-            }
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Hamburger Menu Logic (Unchanged) ---
+        const hamburgerMenu = document.querySelector('.hamburger-menu');
+        const navLinks = document.querySelector('.nav-links');
+        if (hamburgerMenu && navLinks) {
+            hamburgerMenu.addEventListener('click', () => {
+                navLinks.classList.toggle('active');
+                hamburgerMenu.classList.toggle('active');
+            });
+        }
 
-            // --- Loading Overlay Logic ---
-            const dataForm = document.querySelector('.digital-data-form');
-            const loadingOverlay = document.getElementById('loading-overlay');
+        // --- NEW: AJAX Form Submission & Advanced Overlay Logic ---
+        const dataForm = document.querySelector('.digital-data-form');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        
+        // Find the new elements inside the overlay
+        const overlayText = document.getElementById('overlay-text');
+        const overlayActions = document.getElementById('overlay-actions');
+        const spinner = loadingOverlay.querySelector('.spinner');
 
-            if (dataForm && loadingOverlay) {
-                // 1. Show the overlay when the form is submitted
-                dataForm.addEventListener('submit', (event) => {
-                    // (You can add your validation logic here if you want)
-                    loadingOverlay.classList.add('visible');
+        if (dataForm && loadingOverlay && overlayText && overlayActions && spinner) {
+            dataForm.addEventListener('submit', (event) => {
+                // 1. Prevent the default page reload
+                event.preventDefault();
+
+                // Simple validation to ensure data is present
+                const fileInput = document.getElementById('fileInput');
+                const textArea = document.getElementById('pasted_text_area');
+                if (fileInput.files.length === 0 && textArea.value.trim() === '') {
+                    alert("Please select a file or paste text to process.");
+                    return;
+                }
+
+                // 2. Show the "Processing..." popup in its initial state
+                overlayText.textContent = 'Processing your data, please wait...';
+                spinner.style.display = 'block'; // Ensure spinner is visible
+                overlayActions.innerHTML = '';   // Clear any old buttons
+                loadingOverlay.classList.add('visible');
+
+                // 3. Send the form data to the server in the background
+                const formData = new FormData(dataForm);
+                
+                fetch("{% url 'process_digital_data' %}", {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        // This header is good practice for Django AJAX POST requests
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                    },
+                })
+                .then(response => {
+                    // Check if the server response is OK, then parse it as JSON
+                    if (!response.ok) {
+                        // If we get a server error (like 500), try to get the text
+                        return response.json().then(err => { throw new Error(err.error || 'Server error'); });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // 4. This part runs AFTER the server has successfully processed the data
+                    spinner.style.display = 'none'; // Hide the spinner
                     
-                    // 2. THE TRICK: Use a short timeout to hide the overlay.
-                    //    This gives the browser enough time to receive the file
-                    //    download header from the server. The download will start,
-                    //    and the overlay will hide.
-                    setTimeout(() => {
-                        loadingOverlay.classList.remove('visible');
-                    }, 5000); // Hide after 5 seconds
+                    if (data.success) {
+                        // SUCCESS: Update the popup to show a download button
+                        overlayText.textContent = 'Processing Complete!';
+                        
+                        // Create and add the Download and Close buttons
+                        const downloadButton = `<a href="${data.download_url}" class="btn-gradient" style="margin-right: 10px;">Download File</a>`;
+                        const closeButton = `<button type="button" class="btn-secondary" onclick="document.getElementById('loading-overlay').classList.remove('visible');">Close</button>`;
+                        
+                        overlayActions.innerHTML = downloadButton + closeButton;
+                    } else {
+                        // ERROR from Django: Show the error message from the server
+                        overlayText.innerHTML = `An error occurred:<br><small>${data.error || 'Unknown error.'}</small>`;
+                        const closeButton = `<button type="button" class="btn-secondary" onclick="document.getElementById('loading-overlay').classList.remove('visible');">Close</button>`;
+                        overlayActions.innerHTML = closeButton;
+                    }
+                })
+                .catch(error => {
+                    // Handle network-level errors (e.g., server is down)
+                    spinner.style.display = 'none';
+                    overlayText.textContent = 'A network error occurred. Please try again.';
+                    console.error('Fetch Error:', error);
+
+                    // Add a close button for network errors too
+                    const closeButton = `<button type="button" class="btn-secondary" onclick="document.getElementById('loading-overlay').classList.remove('visible');">Close</button>`;
+                    overlayActions.innerHTML = closeButton;
                 });
-            }
-        });
-    </script>
+            });
+        }
+    });
+</script>
 {% endblock extra_js %}

@@ -12,6 +12,7 @@ import os
 import uuid
 from django.conf import settings
 from django.http import JsonResponse
+from django.http import FileResponse, Http404
 import chardet
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm
@@ -30,7 +31,7 @@ from .forms import UserRegisterForm
 # Note: 'render' and 'redirect' are already imported from django.shortcuts,
 # so the lines below are redundant but harmless.
 # from django.shortcuts import render, redirect 
-# from django.urls import reverse # Already used, but keeping for clarity if standalone import was intended
+from django.urls import reverse # Import reverse for URL resolution
 
 from django.db.models import Sum # For dashboard aggregation
 
@@ -111,6 +112,7 @@ def signout_view(request):
     auth_logout(request)
     messages.info(request, 'You have been logged out.')
     return redirect('index') # Redirect to the landing page after signout
+
 
 
 @login_required
@@ -526,11 +528,20 @@ def process_digital_data_view(request):
                 # model_used=model_used, # Uncomment if you add 'model_used' field to TransactionRecord
             )
 
-            response = HttpResponse(cleaned_csv_output, content_type='text/csv')
-            default_name = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_CleanedLeads.csv"
-            response['Content-Disposition'] = f'attachment; filename="{default_name}"'
+            unique_filename = f"processed_{uuid.uuid4()}.csv"
+            output_dir = os.path.join(settings.MEDIA_ROOT, 'processed_files')
+            os.makedirs(output_dir, exist_ok=True)
+            output_filepath = os.path.join(output_dir, unique_filename)
 
-            return response
+            with open(output_filepath, 'w', newline='', encoding='utf-8') as f:
+                f.write(cleaned_csv_output)
+
+            download_url = reverse('download_processed_file', args=[unique_filename])
+            return JsonResponse({
+            'success': True,
+            'message': 'Data processed successfully!',
+            'download_url': download_url
+        })
 
         except RuntimeError as e:
             messages.error(request, f"AI Processing Error: {e}")
@@ -547,7 +558,7 @@ def process_digital_data_view(request):
             }
             return render(request, 'leads/process_digital_data.html', context)
 
-    else:
+    else:   
         context = {
             'instruction_sets': instruction_sets,
             'default_instruction': default_instruction
