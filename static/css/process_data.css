@@ -70,13 +70,43 @@
 
 .file-list li {
     background-color: #333;
-    padding: 8px 15px;
-    border-radius: 5px;
-    margin-bottom: 5px;
-    display: inline-block; /* Display as blocks but allow multiple on a line */
+    padding: 8px 14px;
+    border-radius: 25px;
+    margin-bottom: 8px;
+    display: inline-flex;
+    align-items: center;
     margin-right: 10px;
     font-size: 0.9em;
+    color: #f0f0f0;
 }
+
+.file-list .file-name {
+    margin-right: 8px;
+    word-break: break-word;
+}
+
+.remove-file-item {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 20px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease-in-out;
+    padding: 0;
+}
+
+.remove-file-item:hover {
+    background-color: #cc0000;
+}
+
 
 /* Action Buttons Container */
 .action-buttons-container {
