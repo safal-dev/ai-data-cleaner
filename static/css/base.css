@@ -147,7 +147,8 @@
 .btn-secondary {
     background-color: #4a4a4a; /* A dark grey that fits your theme */
     color: #cccccc; /* A light grey text */
-    border: 1px solid #555; /* A subtle border */
+    border: 1px solid #555;
+    padding: 5px 10px; /* A subtle border */
 }
 
 .btn-secondary:hover {
