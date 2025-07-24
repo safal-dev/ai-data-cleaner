@@ -571,17 +571,23 @@ def process_physical_data_view(request):
     """
     Handles displaying the form (GET) and processing images in the background via AJAX (POST).
     """
-    # This part handles the initial page load (GET request)
+    # Get all instruction sets for the user.
+    instruction_sets = InstructionSet.objects.filter(user=request.user).order_by('name')
+
+    # Check if the user has any instructions and redirect if they don't.
+    if not instruction_sets.exists():
+        messages.info(request, "Welcome! Please create your first AI instruction set to get started.")
+        return redirect('manage_instructions')
+
+    # Find the default instruction.
+    default_instruction = instruction_sets.filter(is_default=True).first()
+
+    # --- This part handles the initial page load (GET request) ---
     if request.method != 'POST':
-        instruction_sets = InstructionSet.objects.filter(user=request.user).order_by('name')
-        if not instruction_sets.exists():
-            messages.info(request, "Welcome! Please create your first AI instruction set to get started.")
-            return redirect('manage_instructions')
-        
-        default_instruction = instruction_sets.filter(is_default=True).first()
         context = {
             'instruction_sets': instruction_sets,
-            'default_instruction': default_instruction
+            'default_instruction': default_instruction,
+            'form_action_url': reverse('process_physical_data') # Pass the URL to the template
         }
         return render(request, 'leads/process_physical_data.html', context)
 
@@ -594,11 +600,10 @@ def process_physical_data_view(request):
         return JsonResponse({'success': False, 'error': f"You have reached your monthly limit ({profile.monthly_quota})."}, status=403)
     
     # Get instruction set from form
-    instruction_sets = InstructionSet.objects.filter(user=request.user)
     selected_instruction_id = request.POST.get('selected_instruction_id')
     selected_instruction = instruction_sets.filter(pk=selected_instruction_id).first()
     if not selected_instruction:
-        selected_instruction = instruction_sets.filter(is_default=True).first() or instruction_sets.first()
+        selected_instruction = default_instruction or instruction_sets.first()
     if not selected_instruction:
         return JsonResponse({'success': False, 'error': 'No AI instruction set found.'}, status=400)
     user_instructions = selected_instruction.instructions
@@ -677,7 +682,7 @@ def process_physical_data_view(request):
         return JsonResponse({'success': False, 'error': f"AI returned data in an unreadable format. Error: {str(e)}"}, status=400)
     except Exception as e:
         return JsonResponse({'success': False, 'error': f'An unexpected error occurred: {str(e)}'}, status=500)
-
+    
 # --- Instruction Set Management Views ---
 @login_required
 def manage_instructions(request):
