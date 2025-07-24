@@ -144,24 +144,20 @@
 }
 
 .btn-secondary {
-    background-color: #ffe5e5;     /* Soft red background */
-    color: #b30000;                /* Dark red text */
-    border: 1px solid #ffcccc;
-    padding: 8px 14px;
-    border-radius: 6px;
+    background: transparent;
+    color: #ffffff;
+    border: 2px solid #7b2d2d; /* Soft deep red border */
+    padding: 8px 18px;
+    border-radius: 25px;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.25s ease;
 }
 
 .btn-secondary:hover {
-    background-color: #ffcccc;
-    border-color: #ff9999;
-    color: #800000;
+    background: linear-gradient(90deg, #ff6a6a, #d64545);
+    color: white;
+    border-color: transparent;
 }
 
-.btn-secondary:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(255, 100, 100, 0.4);
-}
