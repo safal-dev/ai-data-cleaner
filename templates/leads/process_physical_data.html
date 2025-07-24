@@ -120,88 +120,17 @@
     {# The hamburger menu script remains the same #}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- Hamburger Menu Logic (unchanged) ---
             const hamburgerMenu = document.querySelector('.hamburger-menu');
             const navLinks = document.querySelector('.nav-links');
+
             if (hamburgerMenu && navLinks) {
                 hamburgerMenu.addEventListener('click', () => {
                     navLinks.classList.toggle('active');
                     hamburgerMenu.classList.toggle('active');
                 });
             }
-
-            // --- AJAX FORM SUBMISSION FOR PHYSICAL DATA ---
-            const physicalForm = document.querySelector('.physical-data-form');
-            const loadingOverlay = document.getElementById('loading-overlay');
-            const overlayText = document.getElementById('overlay-text');
-            const overlayActions = document.getElementById('overlay-actions');
-            const spinner = loadingOverlay.querySelector('.spinner');
-
-            if (physicalForm && loadingOverlay) {
-                physicalForm.addEventListener('submit', (event) => {
-                    // 1. Stop the page from reloading
-                    event.preventDefault();
-
-                    const fileInput = document.getElementById('fileInput');
-                    if (fileInput.files.length === 0) {
-                        alert("Please select at least one image to process.");
-                        return;
-                    }
-
-                    // 2. Show the "Processing..." popup
-                    overlayText.textContent = 'Processing your images, please wait...';
-                    spinner.style.display = 'block';
-                    overlayActions.innerHTML = '';
-                    loadingOverlay.classList.add('visible');
-
-                    // 3. Send form data in the background with Fetch API
-                    const formData = new FormData(physicalForm);
-                    
-                    fetch("{% url 'process_physical_data' %}", {
-                        method: 'POST',
-                        body: formData,
-                        headers: { 'X-CSRFToken': formData.get('csrfmiddlewaretoken') }
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            // If the server returns an error status (like 400 or 500),
-                            // we try to parse the JSON to get the error message.
-                            return response.json().then(err => { throw err; });
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        // 4. This runs ONLY if the fetch was successful
-                        spinner.style.display = 'none';
-                        
-                        // Check the 'success' flag from our Django view's JSON response
-                        if (data.success) {
-                            // SUCCESS: Update popup with download button
-                            overlayText.textContent = 'Processing Complete!';
-                            const downloadButton = `<a href="${data.download_url}" class="btn btn-gradient">Download Excel File</a>`;
-                            const closeButton = `<button type="button" class="btn btn-secondary" onclick="document.getElementById('loading-overlay').classList.remove('visible');">Close</button>`;
-                            overlayActions.innerHTML = downloadButton + closeButton;
-                        } else {
-                            // Handle logical errors returned from the server (e.g., quota exceeded)
-                            overlayText.innerHTML = `An error occurred:<br><small>${data.error || 'Unknown error.'}</small>`;
-                            const closeButton = `<button type="button" class="btn btn-secondary" onclick="document.getElementById('loading-overlay').classList.remove('visible');">Close</button>`;
-                            overlayActions.innerHTML = closeButton;
-                        }
-                    })
-                    .catch(error => {
-                        // This block catches network errors OR errors thrown from a bad response
-                        spinner.style.display = 'none';
-                        // If the server sent a JSON error, 'error' will be that object
-                        const errorMessage = error.error || 'A network error occurred. Please try again.';
-                        overlayText.innerHTML = `An error occurred:<br><small>${errorMessage}</small>`;
-                        const closeButton = `<button type="button" class="btn btn-secondary" onclick="document.getElementById('loading-overlay').classList.remove('visible');">Close</button>`;
-                        overlayActions.innerHTML = closeButton;
-                        console.error('Fetch Error:', error);
-                    });
-                });
-            }
         });
     </script>
-{% endblock extra_js %}
+
 
 {% endblock extra_js %}
