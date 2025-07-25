@@ -629,7 +629,7 @@ def process_physical_data_view(request):
 
         # --- Cost calculation and profile updates ---
         model_used = 'gemini-1.5-flash'
-        cost = calculate_gemini_cost(request.user, model_used, input_tokens, output_tokens)
+        cost = calculate_gemini_cost(model_used, input_tokens, output_tokens)
 
         profile.total_input_tokens += input_tokens
         profile.total_output_tokens += output_tokens
