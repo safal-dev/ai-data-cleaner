@@ -1,5 +1,5 @@
 # leads/views.py
-
+from .utils import save_dataframe_to_excel, create_zip_file
 import io
 import pandas as pd
 import requests
@@ -567,120 +567,121 @@ def process_digital_data_view(request):
 
 
 @login_required
+@login_required
 def process_physical_data_view(request):
     """
-    Handles displaying the form (GET) and processing images in the background via AJAX (POST).
+    Handles displaying the form (GET) and processing multiple images via AJAX (POST).
+    Generates download links for both a combined sheet and a zip of individual sheets.
     """
-    # This part handles the initial page load (GET request)
+    # This part handles the initial page load (GET request) - no changes needed
     if request.method != 'POST':
+        # ... (your existing GET request logic is perfect) ...
         instruction_sets = InstructionSet.objects.filter(user=request.user).order_by('name')
         if not instruction_sets.exists():
-            messages.info(request, "Welcome! Please create your first AI instruction set to get started.")
+            messages.info(request, "Welcome! Please create your first AI instruction set.")
             return redirect('manage_instructions')
-        
         default_instruction = instruction_sets.filter(is_default=True).first()
-        context = {
-            'instruction_sets': instruction_sets,
-            'default_instruction': default_instruction
-        }
+        context = { 'instruction_sets': instruction_sets, 'default_instruction': default_instruction }
         return render(request, 'leads/process_physical_data.html', context)
 
     # --- This part handles the background AJAX POST request ---
     
-    # Get profile and check quota
+    # --- START OF REFACTORED LOGIC ---
+    
+    # (Quota check and instruction selection logic is the same)
     profile = request.user.profile
     profile.check_and_reset_quota()
     if profile.cleans_this_month >= profile.monthly_quota:
-        return JsonResponse({'success': False, 'error': f"You have reached your monthly data cleaning limit ({profile.monthly_quota})."}, status=403)
+        return JsonResponse({'success': False, 'error': f"Monthly limit reached."}, status=403)
 
-    # Get instruction set from form
     instruction_sets = InstructionSet.objects.filter(user=request.user)
     selected_instruction_id = request.POST.get('selected_instruction_id')
-    selected_instruction = instruction_sets.filter(pk=selected_instruction_id).first()
+    selected_instruction = instruction_sets.filter(pk=selected_instruction_id).first() or instruction_sets.filter(is_default=True).first() or instruction_sets.first()
     if not selected_instruction:
-        selected_instruction = instruction_sets.filter(is_default=True).first() or instruction_sets.first()
-    if not selected_instruction:
-        return JsonResponse({'success': False, 'error': 'No AI instruction set found.'}, status=400)
+        return JsonResponse({'success': False, 'error': 'No instruction set found.'}, status=400)
     user_instructions = selected_instruction.instructions
 
-    # Image Processing Logic
     uploaded_images = request.FILES.getlist('physical_images')
     if not uploaded_images:
         return JsonResponse({'success': False, 'error': 'No image files were provided.'}, status=400)
 
-    image_parts = []
-    supported_image_types = ['image/jpeg', 'image/png', 'image/webp']
-    for uploaded_image in uploaded_images:
-        mime_type, _ = mimetypes.guess_type(uploaded_image.name)
-        if mime_type not in supported_image_types:
-            continue
-        image_parts.append({"mime_type": mime_type, "data": uploaded_image.read()})
+    # --- NEW: Process images individually and store the results ---
+    processed_dataframes = [] # A list to hold each resulting DataFrame
+    total_input_tokens = 0
+    total_output_tokens = 0
+    
+    for image in uploaded_images:
+        try:
+            mime_type, _ = mimetypes.guess_type(image.name)
+            if mime_type not in ['image/jpeg', 'image/png', 'image/webp']:
+                continue # Skip non-image files
 
-    if not image_parts:
-        return JsonResponse({'success': False, 'error': 'No valid image files were found for processing.'}, status=400)
+            image_parts = [{"mime_type": mime_type, "data": image.read()}]
+            
+            # Call the AI for each SINGLE image
+            raw_csv_output, input_tokens, output_tokens = call_gemini_vision_api(image_parts, user_instructions)
+            
+            if raw_csv_output:
+                total_input_tokens += input_tokens
+                total_output_tokens += output_tokens
+                
+                # Convert the CSV output to a pandas DataFrame
+                df = pd.read_csv(io.StringIO(raw_csv_output))
+                df['_source_image'] = image.name # Add a column to track which image it came from
+                processed_dataframes.append(df)
+                
+        except Exception as e:
+            print(f"Failed to process image {image.name}: {str(e)}")
+            continue # If one image fails, just skip it and move to the next
 
-    try:
-        # --- AI Call and Response Handling ---
-        # Ensure call_gemini_vision_api returns (text, in_tokens, out_tokens) or (None, 0, 0)
-        extracted_data_raw_output, input_tokens, output_tokens = call_gemini_vision_api(image_parts, user_instructions)
+    if not processed_dataframes:
+        return JsonResponse({'success': False, 'error': 'AI processing failed for all provided images.'}, status=500)
 
-        if extracted_data_raw_output is None or not extracted_data_raw_output.strip():
-            return JsonResponse({'success': False, 'error': 'AI processing failed or returned an empty response.'}, status=500)
+    # --- Cost calculation and profile updates now use the totals ---
+    model_used = 'gemini-1.5-flash'
+    cost = calculate_gemini_cost(request.user, model_used, total_input_tokens, total_output_tokens)
+    profile.total_input_tokens += total_input_tokens
+    profile.total_output_tokens += total_output_tokens
+    profile.total_cost_usd += cost
+    profile.cleans_this_month += 1
+    profile.save()
+    TransactionRecord.objects.create(
+        user=request.user,
+        input_tokens=total_input_tokens,
+        output_tokens=total_output_tokens,
+        cost_usd=cost,
+        transaction_type='physical'
+    )
 
-        # --- Cost calculation and profile updates ---
-        model_used = 'gemini-1.5-flash'
-        cost = calculate_gemini_cost(model_used, input_tokens, output_tokens)
+    # --- NEW: Create BOTH download options ---
+    session_id = str(uuid.uuid4())
+    
+    # Option 1: Create and save a single combined Excel file
+    combined_df = pd.concat(processed_dataframes, ignore_index=True)
+    combined_filename = f"combined_{session_id}.xlsx"
+    save_dataframe_to_excel(combined_df, combined_filename)
+    combined_url = reverse('download_processed_file', args=[combined_filename])
 
-        profile.total_input_tokens += input_tokens
-        profile.total_output_tokens += output_tokens
-        profile.total_cost_usd += cost
-        profile.cleans_this_month += 1
-        profile.save()
+    # Option 2: Save individual files and then create a ZIP from them
+    individual_filenames = []
+    for i, df in enumerate(processed_dataframes):
+        # Create a clean filename from the original image name
+        base_name = os.path.splitext(df['_source_image'].iloc[0])[0]
+        individual_filename = f"{base_name}_{session_id}.xlsx"
+        save_dataframe_to_excel(df.drop(columns=['_source_image']), individual_filename)
+        individual_filenames.append(individual_filename)
+    
+    zip_filename = f"individual_sheets_{session_id}.zip"
+    create_zip_file(individual_filenames, zip_filename)
+    zip_url = reverse('download_processed_file', args=[zip_filename])
 
-        TransactionRecord.objects.create(
-            user=request.user,
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
-            cost_usd=cost,
-            transaction_type='physical',
-        )
-
-        # --- START OF NEW LOGIC ---
-
-        # 1. Create DataFrame and save to an in-memory Excel file
-        df = pd.read_csv(io.StringIO(extracted_data_raw_output), sep=',')
-        excel_buffer = io.BytesIO()
-        with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
-            df.to_excel(writer, index=False, sheet_name='ExtractedData')
-        excel_buffer.seek(0)
-        
-        # 2. Generate a unique filename and define the save path
-        unique_filename = f"processed_{uuid.uuid4()}.xlsx"
-        output_dir = os.path.join(settings.MEDIA_ROOT, 'processed_files')
-        os.makedirs(output_dir, exist_ok=True)
-        output_filepath = os.path.join(output_dir, unique_filename)
-
-        # 3. Write the in-memory Excel file to a physical file on the server
-        with open(output_filepath, 'wb') as f:
-            f.write(excel_buffer.getvalue())
-        
-        # 4. Create the download URL for the frontend
-        download_url = reverse('download_processed_file', args=[unique_filename])
-
-        # 5. Return the final JSON response
-        return JsonResponse({
-            'success': True,
-            'message': 'Data processed successfully!',
-            'download_url': download_url
-        })
-        # --- END OF NEW LOGIC ---
-
-    except pd.errors.ParserError as e:
-        return JsonResponse({'success': False, 'error': f"AI returned data in an unreadable format. Please refine your instructions. Error: {str(e)}"}, status=400)
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': f'An unexpected error occurred: {str(e)}'}, status=500)
-
-
+    # Return a JSON response with BOTH download URLs
+    return JsonResponse({
+        'success': True,
+        'message': 'Processing complete!',
+        'combined_url': combined_url,
+        'zip_url': zip_url
+    })
 # --- Instruction Set Management Views ---
 @login_required
 def manage_instructions(request):

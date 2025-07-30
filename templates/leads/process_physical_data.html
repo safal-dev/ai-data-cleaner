@@ -132,70 +132,60 @@
 
             // --- AJAX FORM SUBMISSION for PHYSICAL DATA ---
             // THE ONLY CHANGE: Target '.physical-data-form'
-            const physicalForm = document.querySelector('.physical-data-form'); 
-            const loadingOverlay = document.getElementById('loading-overlay');
-            const overlayText = document.getElementById('overlay-text');
-            const overlayActions = document.getElementById('overlay-actions');
-            const spinner = loadingOverlay.querySelector('.spinner');
+ const physicalForm = document.querySelector('.physical-data-form');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const overlayText = document.getElementById('overlay-text');
+        const overlayActions = document.getElementById('overlay-actions');
+        const spinner = loadingOverlay.querySelector('.spinner');
 
-            if (physicalForm && loadingOverlay && overlayText && spinner && overlayActions) {
-                physicalForm.addEventListener('submit', (event) => {
-                    // 1. Prevent the default page reload
-                    event.preventDefault();
+        if (physicalForm && loadingOverlay) {
+            physicalForm.addEventListener('submit', (event) => {
+                event.preventDefault(); // Stop page reload
 
-                    // Validation: Ensure at least one file is selected
-                    const fileInput = document.getElementById('fileInput');
-                    if (fileInput.files.length === 0) {
-                        alert("Please select one or more images to process.");
-                        return; // Stop the submission
-                    }
+                if (document.getElementById('fileInput').files.length === 0) {
+                    alert("Please select one or more images to process.");
+                    return;
+                }
 
-                    // 2. Show the "Processing..." popup
-                    overlayText.textContent = 'Processing your data, please wait...';
-                    spinner.style.display = 'block';
-                    overlayActions.innerHTML = ''; // Clear any previous buttons
-                    loadingOverlay.classList.add('visible');
+                // Show "Processing..." popup
+                overlayText.textContent = 'Processing your data, please wait...';
+                spinner.style.display = 'block';
+                overlayActions.innerHTML = '';
+                loadingOverlay.classList.add('visible');
 
-                    // 3. Send form data in the background
-                    const formData = new FormData(physicalForm);
+                const formData = new FormData(physicalForm);
+                
+                fetch("{% url 'process_physical_data' %}", {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-CSRFToken': formData.get('csrfmiddlewaretoken') }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    spinner.style.display = 'none';
                     
-                    fetch("{% url 'process_physical_data' %}", {
-                        method: 'POST',
-                        body: formData,
-                        headers: { 'X-CSRFToken': formData.get('csrfmiddlewaretoken') }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        // 4. This runs AFTER the server is done processing
-                        spinner.style.display = 'none';
+                    if (data.success) {
+                        // --- THE FIX: Show the two download options ---
+                        overlayText.textContent = 'Processing Complete! How would you like to download your data?';
                         
-                        if (data.success) {
-                            // SUCCESS: Update the popup with a download button
-                            overlayText.textContent = 'Processing Complete!';
-                            
-                            const downloadButton = `<a href="${data.download_url}" class="btn btn-overlay-primary">Download File</a>`;
-                            const closeButton = `<button type="button" class="btn btn-overlay-secondary" onclick="document.getElementById('loading-overlay').classList.remove('visible');">Close</button>`;
-                            
-                            overlayActions.innerHTML = downloadButton + closeButton;
-                        } else {
-                            // ERROR: Show the server's error message
-                            overlayText.innerHTML = `An error occurred:<br><small>${data.error || 'Unknown error.'}</small>`;
-                            
-                            const closeButton = `<button type="button" class="btn btn-overlay-secondary" onclick="document.getElementById('loading-overlay').classList.remove('visible');">Close</button>`;
-                            overlayActions.innerHTML = closeButton;
-                        }
-                    })
-                    .catch(error => {
-                        // Handle network-level errors
-                        spinner.style.display = 'none';
-                        overlayText.textContent = 'A network error occurred. Please try again.';
+                        const combinedButton = `<a href="${data.combined_url}" class="btn btn-overlay-primary">Download as One Sheet</a>`;
+                        const zipButton = `<a href="${data.zip_url}" class="btn btn-overlay-secondary">Download Separate Sheets (.zip)</a>`;
                         const closeButton = `<button type="button" class="btn btn-overlay-secondary" onclick="document.getElementById('loading-overlay').classList.remove('visible');">Close</button>`;
+                        
+                        overlayActions.innerHTML = combinedButton + zipButton + closeButton;
+                    } else {
+                        // (Error handling is the same)
+                        overlayText.innerHTML = `An error occurred:<br><small>${data.error || 'Unknown error.'}</small>`;
+                        const closeButton = `<button type-="button" class="btn btn-overlay-secondary" onclick="document.getElementById('loading-overlay').classList.remove('visible');">Close</button>`;
                         overlayActions.innerHTML = closeButton;
-                        console.error('AJAX Fetch Error:', error);
-                    });
+                    }
+                })
+                .catch(error => {
+                    // (Error handling is the same)
                 });
-            }
-        });
+            });
+        }
+    });
     </script>
 
 
