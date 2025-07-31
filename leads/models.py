@@ -124,6 +124,19 @@ class TransactionRecord(models.Model):
         help_text="Type of data processed (digital or physical)."
     )
     # You could add 'model_used = models.CharField(max_length=100, blank=True)' if you want to store model name per transaction
+    processed_file = models.FileField(
+        upload_to='processed_files/%Y/%m/%d/', # Organizes saved files by date
+        null=True,  # Allows old records to not have a file
+        blank=True, # Allows this field to be empty in forms
+        help_text="The final processed file available for download in the history."
+    )
+    
+    original_filename = models.CharField(
+        max_length=255, 
+        blank=True, 
+        null=True,
+        help_text="The name of the original file or a description of the data source."
+    )
 
     class Meta:
         ordering = ['-timestamp'] # Default ordering: newest transactions first
