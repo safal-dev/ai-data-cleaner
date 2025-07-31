@@ -553,7 +553,7 @@ def process_digital_data_view(request):
             os.makedirs(output_dir, exist_ok=True)
             output_filepath = os.path.join(output_dir, unique_filename)
             relative_path = os.path.join('processed_files', unique_filename)
-            
+
             # --- Create a TransactionRecord for this usage event ---
             transaction = TransactionRecord.objects.create(
                 user=request.user,
@@ -561,8 +561,8 @@ def process_digital_data_view(request):
                 output_tokens=output_tokens,
                 cost_usd=cost,
                 transaction_type='digital',
-                # processed_file=relative_path, # <-- THE NEW LINE
-                # original_filename="Digital Data Process" 
+                processed_file=relative_path, # <-- THE NEW LINE
+                original_filename="Digital Data Process" 
                 # # model_used=model_used, # Uncomment if you add 'model_used' field to TransactionRecord
             )
 
