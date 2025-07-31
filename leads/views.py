@@ -329,6 +329,18 @@ def dashboard_view(request):
     return render(request, 'leads/dashboard.html', context)
 
 @login_required
+def history_view(request):
+    """
+    Displays a list of the user's past processing transactions
+    with links to re-download the processed files.
+    """
+    # Get all transactions for the currently logged-in user, ordered by newest first.
+    transactions = TransactionRecord.objects.filter(user=request.user).order_by('-timestamp')
+    
+    context = {
+        'transactions': transactions
+    }
+    return render(request, 'leads/history.html', context)
 # In your leads/views.py file
 
 @login_required
