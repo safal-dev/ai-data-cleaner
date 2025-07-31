@@ -669,6 +669,13 @@ def process_physical_data_view(request):
         profile.total_cost_usd += cost
         profile.cleans_this_month += 1
         profile.save()
+        
+        # 2. Generate a unique filename and define the save path
+        unique_filename = f"processed_{uuid.uuid4()}.xlsx"
+        output_dir = os.path.join(settings.MEDIA_ROOT, 'processed_files')
+        os.makedirs(output_dir, exist_ok=True)
+        output_filepath = os.path.join(output_dir, unique_filename)
+        relative_path = os.path.join('processed_files', unique_filename)
 
         transaction = TransactionRecord.objects.create(
             user=request.user,
@@ -689,12 +696,7 @@ def process_physical_data_view(request):
             df.to_excel(writer, index=False, sheet_name='ExtractedData')
         excel_buffer.seek(0)
         
-        # 2. Generate a unique filename and define the save path
-        unique_filename = f"processed_{uuid.uuid4()}.xlsx"
-        output_dir = os.path.join(settings.MEDIA_ROOT, 'processed_files')
-        os.makedirs(output_dir, exist_ok=True)
-        output_filepath = os.path.join(output_dir, unique_filename)
-        relative_path = os.path.join('processed_files', unique_filename)
+
 
         # 3. Write the in-memory Excel file to a physical file on the server
         with open(output_filepath, 'wb') as f:
