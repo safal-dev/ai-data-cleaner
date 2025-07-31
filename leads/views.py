@@ -555,9 +555,9 @@ def process_digital_data_view(request):
                 output_tokens=output_tokens,
                 cost_usd=cost,
                 transaction_type='digital',
-                processed_file=relative_path, # <-- THE NEW LINE
-                original_filename="Digital Data Process" 
-                # model_used=model_used, # Uncomment if you add 'model_used' field to TransactionRecord
+                # processed_file=relative_path, # <-- THE NEW LINE
+                # original_filename="Digital Data Process" 
+                # # model_used=model_used, # Uncomment if you add 'model_used' field to TransactionRecord
             )
 
             unique_filename = f"processed_{uuid.uuid4()}.csv"
@@ -569,7 +569,7 @@ def process_digital_data_view(request):
             with open(output_filepath, 'w', newline='', encoding='utf-8') as f:
                 f.write(cleaned_csv_output)
 
-            download_url = reverse('download_history_file', args=[transaction.pk])
+            download_url = reverse('download_processed_file', args=[unique_filename])
             return JsonResponse({
             'success': True,
             'message': 'Data processed successfully!',
