@@ -525,6 +525,8 @@ def process_digital_data_view(request):
                 output_tokens=output_tokens,
                 cost_usd=cost,
                 transaction_type='digital',
+                processed_file=relative_path, # <-- THE NEW LINE
+                original_filename="Digital Data Process" 
                 # model_used=model_used, # Uncomment if you add 'model_used' field to TransactionRecord
             )
 
@@ -532,6 +534,7 @@ def process_digital_data_view(request):
             output_dir = os.path.join(settings.MEDIA_ROOT, 'processed_files')
             os.makedirs(output_dir, exist_ok=True)
             output_filepath = os.path.join(output_dir, unique_filename)
+            relative_path = os.path.join('processed_files', unique_filename)
 
             with open(output_filepath, 'w', newline='', encoding='utf-8') as f:
                 f.write(cleaned_csv_output)
@@ -643,6 +646,8 @@ def process_physical_data_view(request):
             output_tokens=output_tokens,
             cost_usd=cost,
             transaction_type='physical',
+            processed_file=relative_path,
+            original_filename="Physical Data Process"
         )
 
         # --- START OF NEW LOGIC ---
@@ -659,6 +664,7 @@ def process_physical_data_view(request):
         output_dir = os.path.join(settings.MEDIA_ROOT, 'processed_files')
         os.makedirs(output_dir, exist_ok=True)
         output_filepath = os.path.join(output_dir, unique_filename)
+        relative_path = os.path.join('processed_files', unique_filename)
 
         # 3. Write the in-memory Excel file to a physical file on the server
         with open(output_filepath, 'wb') as f:
