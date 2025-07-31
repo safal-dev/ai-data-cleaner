@@ -548,6 +548,11 @@ def process_digital_data_view(request):
             profile.cleans_this_month += 1
             profile.save()
 
+            unique_filename = f"processed_{uuid.uuid4()}.xlsx"
+            output_dir = os.path.join(settings.MEDIA_ROOT, 'processed_files')
+            os.makedirs(output_dir, exist_ok=True)
+            output_filepath = os.path.join(output_dir, unique_filename)
+            relative_path = os.path.join('processed_files', unique_filename)
             # --- Create a TransactionRecord for this usage event ---
             transaction = TransactionRecord.objects.create(
                 user=request.user,
@@ -569,7 +574,7 @@ def process_digital_data_view(request):
             with open(output_filepath, 'w', newline='', encoding='utf-8') as f:
                 f.write(cleaned_csv_output)
 
-            download_url = reverse('download_processed_file', args=[unique_filename])
+            download_url = reverse('download_history_file', args=[transaction.pk])
             return JsonResponse({
             'success': True,
             'message': 'Data processed successfully!',
@@ -669,7 +674,7 @@ def process_physical_data_view(request):
         profile.total_cost_usd += cost
         profile.cleans_this_month += 1
         profile.save()
-        
+
         # 2. Generate a unique filename and define the save path
         unique_filename = f"processed_{uuid.uuid4()}.xlsx"
         output_dir = os.path.join(settings.MEDIA_ROOT, 'processed_files')
