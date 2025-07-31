@@ -8,13 +8,33 @@
 {% endblock %}
 
 {% block content %}
-<header class="main-header">
-    <!-- ... Your standard header code ... -->
-    <ul class="nav-links">
-        <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
-        <li><a href="{% url 'manage_instructions' %}">Manage Instructions</a></li>
-    </ul>
-</header>
+ <header class="main-header">
+        <div class="container">
+        <a href="{% url 'index' %}" class="logo">
+             <img src="{% static 'images/bizdata.shaara.app-logo.png' %}" alt="Lead Cleaner Logo">
+        </a>
+
+            <nav class="main-nav">
+                <button class="hamburger-menu" aria-label="Toggle navigation">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+                <ul class="nav-links">
+                    
+                    <li><a href="{% url 'manage_instructions' %}" class="btn-gradient">Manage Instruction</a></li>
+                    <li><a href="{% url 'history' %}">History</a></li> 
+                    <!-- ... inside your nav-links ... -->
+                    <li>
+    <form action="{% url 'logout' %}" method="post" style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" class="nav-link-item logout-button">Logout</button>
+    </form>
+</li>
+                </ul>
+            </nav>
+        </div>
+    </header>
 
 <div class="manage-instructions-wrapper">
     <div class="page-header">
