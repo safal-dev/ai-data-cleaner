@@ -88,10 +88,6 @@ def download_history_file(request, pk):
     transaction = get_object_or_404(TransactionRecord, pk=pk, user=request.user)
     
     if transaction.processed_file:
-        # The .url attribute of a FileField gives the public URL
-        # For this to work, MEDIA_URL and MEDIA_ROOT must be set up
-        # We will serve it directly for better security and to avoid needing Nginx for media
-        
         file_path = transaction.processed_file.path
         if os.path.exists(file_path):
             return FileResponse(open(file_path, 'rb'), as_attachment=True, filename=os.path.basename(file_path))
@@ -99,6 +95,7 @@ def download_history_file(request, pk):
             raise Http404("File not found on disk.")
     else:
         raise Http404("No file associated with this transaction.")
+
 
 def signin_view(request):
     if request.method == 'POST':

@@ -28,4 +28,5 @@ urlpatterns = [
     path('set_default_instruction/<int:pk>/', views.set_default_instruction, name='set_default_instruction'),
     path('download/<str:filename>/', views.download_processed_file, name='download_processed_file'),
     path('history/', views.history_view, name='history'),
+     path('history/download/<int:pk>/', views.download_history_file, name='download_history_file'),
 ]
