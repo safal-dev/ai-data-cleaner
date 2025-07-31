@@ -106,11 +106,13 @@ class TransactionRecord(models.Model):
     Each record represents one API call and its associated token usage and cost.
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transactions')
-    timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(auto_now_add=True) # Automatically set when created
     
+    # Using DecimalField for token counts for consistency with cost and potential large numbers
     input_tokens = models.DecimalField(max_digits=15, decimal_places=0, default=Decimal('0'))
     output_tokens = models.DecimalField(max_digits=15, decimal_places=0, default=Decimal('0'))
     
+    # Cost in USD, highly precise
     cost_usd = models.DecimalField(max_digits=12, decimal_places=6, default=Decimal('0.00'))
     
     transaction_type = models.CharField(
@@ -121,20 +123,13 @@ class TransactionRecord(models.Model):
         ],
         help_text="Type of data processed (digital or physical)."
     )
-    
-    # --- The fields from the second definition are now correctly included ---
-    processed_file = models.FileField(
-        upload_to='processed_files/%Y/%m/%d/',
-        null=True,
-        blank=True,
-        help_text="The final processed file available for download."
-    )
-    original_filename = models.CharField(max_length=255, blank=True, null=True)
+    # You could add 'model_used = models.CharField(max_length=100, blank=True)' if you want to store model name per transaction
 
     class Meta:
-        ordering = ['-timestamp']
+        ordering = ['-timestamp'] # Default ordering: newest transactions first
         verbose_name = "Transaction Record"
         verbose_name_plural = "Transaction Records"
 
     def __str__(self):
         return f"Transaction for {self.user.username} on {self.timestamp.strftime('%Y-%m-%d %H:%M')}"
+
