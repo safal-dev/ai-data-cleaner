@@ -133,16 +133,3 @@ class TransactionRecord(models.Model):
     def __str__(self):
         return f"Transaction for {self.user.username} on {self.timestamp.strftime('%Y-%m-%d %H:%M')}"
 
-class TransactionRecord(models.Model):
-    # ... your existing fields (user, timestamp, input_tokens, etc.) ...
-
-    # --- ADD THIS NEW FIELD ---
-    processed_file = models.FileField(
-        upload_to='processed_files/%Y/%m/%d/', # Organizes files by date
-        null=True,
-        blank=True,
-        help_text="The final processed file available for download."
-    )
-
-    # You can also add a field for the original filename for clarity
-    original_filename = models.CharField(max_length=255, blank=True, null=True)
