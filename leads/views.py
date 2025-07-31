@@ -79,6 +79,27 @@ def signup_view(request):
         form = UserRegisterForm()
     return render(request, 'leads/signup.html', {'form': form})
 
+@login_required
+def download_history_file(request, pk):
+    """
+    Finds a TransactionRecord by its primary key (pk) and serves its associated file.
+    """
+    # Get the transaction, ensuring it belongs to the logged-in user for security
+    transaction = get_object_or_404(TransactionRecord, pk=pk, user=request.user)
+    
+    if transaction.processed_file:
+        # The .url attribute of a FileField gives the public URL
+        # For this to work, MEDIA_URL and MEDIA_ROOT must be set up
+        # We will serve it directly for better security and to avoid needing Nginx for media
+        
+        file_path = transaction.processed_file.path
+        if os.path.exists(file_path):
+            return FileResponse(open(file_path, 'rb'), as_attachment=True, filename=os.path.basename(file_path))
+        else:
+            raise Http404("File not found on disk.")
+    else:
+        raise Http404("No file associated with this transaction.")
+
 def signin_view(request):
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
@@ -531,7 +552,7 @@ def process_digital_data_view(request):
             profile.save()
 
             # --- Create a TransactionRecord for this usage event ---
-            TransactionRecord.objects.create(
+            transaction = TransactionRecord.objects.create(
                 user=request.user,
                 input_tokens=input_tokens,
                 output_tokens=output_tokens,
@@ -551,7 +572,7 @@ def process_digital_data_view(request):
             with open(output_filepath, 'w', newline='', encoding='utf-8') as f:
                 f.write(cleaned_csv_output)
 
-            download_url = reverse('download_processed_file', args=[unique_filename])
+            download_url = reverse('download_history_file', args=[transaction.pk])
             return JsonResponse({
             'success': True,
             'message': 'Data processed successfully!',
@@ -652,7 +673,7 @@ def process_physical_data_view(request):
         profile.cleans_this_month += 1
         profile.save()
 
-        TransactionRecord.objects.create(
+        transaction = TransactionRecord.objects.create(
             user=request.user,
             input_tokens=input_tokens,
             output_tokens=output_tokens,
@@ -683,7 +704,7 @@ def process_physical_data_view(request):
             f.write(excel_buffer.getvalue())
         
         # 4. Create the download URL for the frontend
-        download_url = reverse('download_processed_file', args=[unique_filename])
+        download_url = reverse('download_history_file', args=[transaction.pk])
 
         # 5. Return the final JSON response
         return JsonResponse({
