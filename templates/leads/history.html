@@ -1,0 +1,63 @@
+{# In templates/leads/history.html #}
+{% extends 'leads/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/landing_page.css' %}">
+    <link rel="stylesheet" href="{% static 'css/manage_instructions.css' %}"> <!-- Reuse this for table styles -->
+{% endblock %}
+
+{% block content %}
+<header class="main-header">
+    <!-- ... Your standard header code ... -->
+    <ul class="nav-links">
+        <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li><a href="{% url 'manage_instructions' %}">Manage Instructions</a></li>
+    </ul>
+</header>
+
+<div class="manage-instructions-wrapper">
+    <div class="page-header">
+        <h1>Processing History</h1>
+    </div>
+
+    {% if transactions %}
+        <div class="table-container">
+            <table class="instruction-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Cost (USD)</th>
+                        <th class="text-center">Download</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in transactions %}
+                        <tr class="instruction-row">
+                            <td data-label="Date">{{ tx.timestamp|date:"Y-m-d H:i" }}</td>
+                            <td data-label="Type">{{ tx.get_transaction_type_display }}</td>
+                            <td data-label="Cost">${{ tx.cost_usd|floatformat:6 }}</td>
+                            <td data-label="Download" class="text-center">
+                                {% if tx.processed_file %}
+                                    <a href="{{ tx.processed_file.url }}" class="btn-action" title="Download File">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                {% else %}
+                                    <span>N/A</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="no-instructions-message">You have not processed any data yet.</p>
+    {% endif %}
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+    <!-- Your hamburger menu JS -->
+{% endblock extra_js %}

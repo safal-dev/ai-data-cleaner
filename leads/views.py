@@ -525,6 +525,8 @@ def process_digital_data_view(request):
                 output_tokens=output_tokens,
                 cost_usd=cost,
                 transaction_type='digital',
+                processed_file=relative_path,
+                original_filename="Digital Data Process" 
                 # model_used=model_used, # Uncomment if you add 'model_used' field to TransactionRecord
             )
 
@@ -532,6 +534,7 @@ def process_digital_data_view(request):
             output_dir = os.path.join(settings.MEDIA_ROOT, 'processed_files')
             os.makedirs(output_dir, exist_ok=True)
             output_filepath = os.path.join(output_dir, unique_filename)
+            relative_path = os.path.join('processed_files', unique_filename)
 
             with open(output_filepath, 'w', newline='', encoding='utf-8') as f:
                 f.write(cleaned_csv_output)
@@ -564,7 +567,18 @@ def process_digital_data_view(request):
             'default_instruction': default_instruction
         }
         return render(request, 'leads/process_digital_data.html', context)
-
+    
+def history_view(request):
+    """
+    Displays a list of the user's past processing transactions.
+    """
+    # Get all transactions for the current user, newest first
+    transactions = TransactionRecord.objects.filter(user=request.user).order_by('-timestamp')
+    
+    context = {
+        'transactions': transactions
+    }
+    return render(request, 'leads/history.html', context)
 
 @login_required
 def process_physical_data_view(request):
