@@ -645,40 +645,50 @@ def process_physical_data_view(request):
 
     image_parts = []
     supported_image_types = ['image/jpeg', 'image/png', 'image/webp']
+    source_filenames = [] 
     for uploaded_image in uploaded_images:
         mime_type, _ = mimetypes.guess_type(uploaded_image.name)
         if mime_type not in supported_image_types:
             continue
         image_parts.append({"mime_type": mime_type, "data": uploaded_image.read()})
+        source_filenames.append(uploaded_image.name)
 
     if not image_parts:
         return JsonResponse({'success': False, 'error': 'No valid image files were found for processing.'}, status=400)
 
+# --- PASTE THIS NEW BLOCK IN THE SAME LOCATION ---
+
+
     try:
-        # --- AI Call and Response Handling ---
-        # Ensure call_gemini_vision_api returns (text, in_tokens, out_tokens) or (None, 0, 0)
+        # 1. Call the AI ONCE with ALL images.
         extracted_data_raw_output, input_tokens, output_tokens = call_gemini_vision_api(image_parts, user_instructions)
 
         if extracted_data_raw_output is None or not extracted_data_raw_output.strip():
             return JsonResponse({'success': False, 'error': 'AI processing failed or returned an empty response.'}, status=500)
 
-        # --- Cost calculation and profile updates ---
+        # 2. Update profile and calculate cost.
         model_used = 'gemini-1.5-flash'
-        cost = calculate_gemini_cost(model_used, input_tokens, output_tokens)
-
+        cost = calculate_gemini_cost(request.user, model_used, input_tokens, output_tokens)
+        
         profile.total_input_tokens += input_tokens
         profile.total_output_tokens += output_tokens
         profile.total_cost_usd += cost
         profile.cleans_this_month += 1
         profile.save()
-
-        # 2. Generate a unique filename and define the save path
-        unique_filename = f"processed_{uuid.uuid4()}.xlsx"
-        output_dir = os.path.join(settings.MEDIA_ROOT, 'processed_files')
-        os.makedirs(output_dir, exist_ok=True)
-        output_filepath = os.path.join(output_dir, unique_filename)
+        
+        # 3. Save the single, combined result to one Excel file.
+        unique_filename = f"processed_images_{uuid.uuid4()}.xlsx"
         relative_path = os.path.join('processed_files', unique_filename)
-
+        output_filepath = os.path.join(settings.MEDIA_ROOT, relative_path)
+        os.makedirs(os.path.dirname(output_filepath), exist_ok=True)
+        
+        df = pd.read_csv(io.StringIO(extracted_data_raw_output))
+        df.to_excel(output_filepath, index=False, engine='xlsxwriter')
+        
+        # 4. Create ONE TransactionRecord for the entire job.
+        # We need to get the source filenames before this block.
+        # Let's assume you have a list called 'source_filenames' from the loop above.
+        original_names_str = ", ".join(source_filenames) # You'll need to create this list
         transaction = TransactionRecord.objects.create(
             user=request.user,
             input_tokens=input_tokens,
@@ -686,40 +696,21 @@ def process_physical_data_view(request):
             cost_usd=cost,
             transaction_type='physical',
             processed_file=relative_path,
-            original_filename="Physical Data Process"
+            original_filename=original_names_str
         )
-
-        # --- START OF NEW LOGIC ---
-
-        # 1. Create DataFrame and save to an in-memory Excel file
-        df = pd.read_csv(io.StringIO(extracted_data_raw_output), sep=',')
-        excel_buffer = io.BytesIO()
-        with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
-            df.to_excel(writer, index=False, sheet_name='ExtractedData')
-        excel_buffer.seek(0)
         
-
-
-        # 3. Write the in-memory Excel file to a physical file on the server
-        with open(output_filepath, 'wb') as f:
-            f.write(excel_buffer.getvalue())
-        
-        # 4. Create the download URL for the frontend
+        # 5. Return the link to the single, combined Excel file.
         download_url = reverse('download_history_file', args=[transaction.pk])
-
-        # 5. Return the final JSON response
         return JsonResponse({
             'success': True,
-            'message': 'Data processed successfully!',
+            'message': 'Images processed successfully!',
             'download_url': download_url
         })
-        # --- END OF NEW LOGIC ---
 
     except pd.errors.ParserError as e:
         return JsonResponse({'success': False, 'error': f"AI returned data in an unreadable format. Please refine your instructions. Error: {str(e)}"}, status=400)
     except Exception as e:
         return JsonResponse({'success': False, 'error': f'An unexpected error occurred: {str(e)}'}, status=500)
-
 
 # --- Instruction Set Management Views ---
 @login_required
